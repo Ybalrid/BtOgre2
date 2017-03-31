@@ -17,6 +17,8 @@
 #ifndef _BtOgrePG_H_
 #define _BtOgrePG_H_
 
+#include "systemMacro.h"
+
 #include "btBulletDynamicsCommon.h"
 #include "BtOgreExtras.h"
 #include "Ogre.h"
@@ -26,7 +28,7 @@ namespace BtOgre {
 typedef std::map<unsigned char, Vector3Array*> BoneIndex;
 typedef std::pair<unsigned short, Vector3Array*> BoneKeyIndex;
 
-class VertexIndexToShape
+class DLL VertexIndexToShape
 {
 public:
 	VertexIndexToShape(const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
@@ -50,13 +52,13 @@ public:
 
 protected:
 
-	void addStaticVertexData(const Ogre::VertexData *vertex_data);
+	void addStaticVertexData(const Ogre::v1::VertexData *vertex_data);
 
-	void addAnimatedVertexData(const Ogre::VertexData *vertex_data,
-		const Ogre::VertexData *blended_data,
-		const Ogre::Mesh::IndexMap *indexMap);
+	void addAnimatedVertexData(const Ogre::v1::VertexData *vertex_data,
+		const Ogre::v1::VertexData *blended_data,
+		const Ogre::v1::Mesh::IndexMap *indexMap);
 
-	void addIndexData(Ogre::IndexData *data, const unsigned int offset = 0);
+	void addIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
 
 protected:
@@ -76,38 +78,39 @@ protected:
 };
 
 //For static (non-animated) meshes.
-class StaticMeshToShapeConverter : public VertexIndexToShape
+class DLL StaticMeshToShapeConverter : public VertexIndexToShape
 {
 public:
 
 	StaticMeshToShapeConverter(Ogre::Renderable *rend, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
-	StaticMeshToShapeConverter(Ogre::Entity *entity,   const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+	StaticMeshToShapeConverter(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+	StaticMeshToShapeConverter(Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 	StaticMeshToShapeConverter();
 
 	~StaticMeshToShapeConverter();
 
-	void addEntity(Ogre::Entity *entity,const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+	void addEntity(Ogre::v1::Entity *entity,const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
-	void addMesh(const Ogre::MeshPtr &mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+	void addMesh(const Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
 
 protected:
 
-	Ogre::Entity*		mEntity;
+	Ogre::v1::Entity*		mEntity;
 	Ogre::SceneNode*	mNode;
 };
 
 //For animated meshes.
-class AnimatedMeshToShapeConverter : public VertexIndexToShape
+class DLL AnimatedMeshToShapeConverter : public VertexIndexToShape
 {
 public:
 
-	AnimatedMeshToShapeConverter(Ogre::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+	AnimatedMeshToShapeConverter(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 	AnimatedMeshToShapeConverter();
 	~AnimatedMeshToShapeConverter();
 
-	void addEntity(Ogre::Entity *entity,const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
-	void addMesh(const Ogre::MeshPtr &mesh, const Ogre::Matrix4 &transform);
+	void addEntity(Ogre::v1::Entity *entity,const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+	void addMesh(const Ogre::v1::MeshPtr &mesh, const Ogre::Matrix4 &transform);
 
 	btBoxShape* createAlignedBox(unsigned char bone,
 		const Ogre::Vector3 &bonePosition,
@@ -132,7 +135,7 @@ protected:
 		Ogre::Vector3 &center);
 
 
-	Ogre::Entity*		mEntity;
+	Ogre::v1::Entity*		mEntity;
 	Ogre::SceneNode*	mNode;
 
 	Ogre::Vector3       *mTransformedVerticesTemp;
