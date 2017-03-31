@@ -11,8 +11,6 @@ The goal is to reorganise the source code of this project, and also do some clea
 
 ## Changes made and current state
 
-Right now, this is probably not really recomeded to base any project on this thing, but there's nothing that would break dramatically
-
  - Motion states moves "derivated coordinates" instead of the parent ones
  - Class implementation are not in headers
  - Debug drawer re-implemented for Ogre V2 by using a manual object instead of an array of dynamic renderables
@@ -33,6 +31,8 @@ To do theses things, I'll probably need to put my head quite deep into the VAO (
 --- 
 
 ## Current state of this project
+
+Currently, I can't recomment to anybody to actually use this thing. But it's working. You don't have a way to cleanly build it yet, but just compiling these files into your project should do it. 
 
 In the present state, it is relying on Ogre v1 mesh object to generate Bullet body shapes. I want to move that to be fully Ogre v2.
 
