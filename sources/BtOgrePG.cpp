@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "BtOgrePG.h"
 
 BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node, const btTransform& transform, const btTransform& offset) : mTransform(transform),

@@ -16,8 +16,6 @@
 #ifndef _BtOgreShapes_H_
 #define _BtOgreShapes_H_
 
-#include "systemMacro.h"
-
 #include "btBulletDynamicsCommon.h"
 #include "OgreSceneNode.h"
 #include "OgreSimpleRenderable.h"
@@ -26,6 +24,9 @@
 #include "OgreMaterialManager.h"
 #include "OgreTechnique.h"
 #include "OgrePass.h"
+#include "OgreRoot.h"
+#include "OgreHlms.h"
+#include "Hlms/Unlit/OgreHlmsUnlit.h"
 
 #include "OgreLogManager.h"
 
@@ -34,7 +35,7 @@ namespace BtOgre
 	typedef std::vector<Ogre::Vector3> Vector3Array;
 
 	//Converts from and to Bullet and Ogre stuff. Pretty self-explanatory.
-	class DLL Convert
+	class Convert
 	{
 	public:
 		Convert() {};
@@ -52,7 +53,7 @@ namespace BtOgre
 	//From here on its debug-drawing stuff. ------------------------------------------------------------------
 
 	//Draw the lines Bullet want's you to draw
-	class DLL LineDrawer
+	class LineDrawer
 	{
 		Ogre::String sceneManagerName;
 		///How a line is stored

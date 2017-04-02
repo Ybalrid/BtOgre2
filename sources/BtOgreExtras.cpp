@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "BtOgreExtras.h"
 
 btQuaternion BtOgre::Convert::toBullet(const Ogre::Quaternion& q)
