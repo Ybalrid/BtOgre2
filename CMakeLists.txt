@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.0)
 
-project(BtOgre)
+project(BtOgre21)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake-extras/)
 
@@ -13,5 +13,5 @@ include_directories(
     ${OGRE_INCLUDE_DIRS}
 )
 
-add_library(BtOgre STATIC sources/BtOgreGP.cpp sources/BtOgrePG.cpp sources/BtOgreExtras.cpp include/BtOgre.hpp include/BtOgreExtras.h include/BtOgreGP.h include/BtOgrePG.h)
-target_link_libraries(BtOgre ${BULLET_LIBRARIES} ${OGRE_LIBRARIES})
+add_library(BtOgre21 STATIC sources/BtOgreGP.cpp sources/BtOgrePG.cpp sources/BtOgreExtras.cpp include/BtOgre.hpp include/BtOgreExtras.h include/BtOgreGP.h include/BtOgrePG.h)
+target_link_libraries(BtOgre21 ${BULLET_LIBRARIES} ${OGRE_LIBRARIES})
