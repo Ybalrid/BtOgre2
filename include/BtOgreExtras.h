@@ -34,25 +34,28 @@ namespace BtOgre
 {
 	typedef std::vector<Ogre::Vector3> Vector3Array;
 
-	//Converts from and to Bullet and Ogre stuff. Pretty self-explanatory.
-	class Convert
+	///Converts from and to Bullet and Ogre stuff. Pretty self-explanatory.
+	struct Convert
 	{
-	public:
-		Convert() {};
-		~Convert() {};
+		///Do not permit to construct a "BtOgre::Convert" object
+		Convert() = delete;
 
+		///Ogre -> Bullet Quaternion
 		static btQuaternion toBullet(const Ogre::Quaternion& q);
 
+		///Ogre -> Bullet Vector 3D
 		static btVector3 toBullet(const Ogre::Vector3& v);
 
+		///Bullet -> Ogre Quaternion
 		static Ogre::Quaternion toOgre(const btQuaternion& q);
 
+		///Bullet -> Ogre Vector 3D
 		static Ogre::Vector3 toOgre(const btVector3& v);
 	};
 
 	//From here on its debug-drawing stuff. ------------------------------------------------------------------
 
-	//Draw the lines Bullet want's you to draw
+	///Draw the lines Bullet want's you to draw
 	class LineDrawer
 	{
 		Ogre::String sceneManagerName;
