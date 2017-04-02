@@ -6,13 +6,11 @@ BtOgre21 is a simple Bullet-Ogre connection made for Ogre 2.1+
 
 You'll need to define some variables for CMake
 
-`OGRE_HOME` : where your Ogre **2.1** SDK is located
-`BULLET_ROOT` : where your Bullet build3 directory is located
+ - `OGRE_HOME` : where your Ogre **2.1** SDK is located
+ - `BULLET_ROOT` : where your Bullet build3 directory is located
 
 Then you'll be able to use your favorite compiler and toolchain to build this project.
-
 Was only tested with Visual Studio 14 (2015) x64
-
 
 ## Attribution of original work
 
@@ -43,10 +41,6 @@ To do theses things, I'll probably need to put my head quite deep into the VAO (
 
 ## Current state of this project
 
-Currently, I can't recomment to anybody to actually use this thing. But it's working. You don't have a way to cleanly build it yet, but just compiling these files into your project should do it. 
+Currently, I can't recomment to anybody to actually use this thing. But it's working. Just generate a project via CMake and build the static library. ;-)
 
 In the present state, it is relying on Ogre v1 mesh object to generate Bullet body shapes. I want to move that to be fully Ogre v2.
-
-the CMake build on this repo, and the premake / lua things are probably broken as of now, and this project is pretty much a work in progress.
-
-One of the things I will do is make CMake output a project that build BtOgre as either a static or dynamic library properly. I'm currently using BtOgre with the "paste the sources in your project" and that's not that great... ^^"
