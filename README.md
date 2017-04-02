@@ -1,7 +1,18 @@
 # BtOgre21 - Simple Bullet-Ogre 2.1 connection
 
-
 BtOgre21 is a simple Bullet-Ogre connection made for Ogre 2.1+
+
+## Build and usage instructions
+
+You'll need to define some variables for CMake
+
+`OGRE_HOME` : where your Ogre **2.1** SDK is located
+`BULLET_ROOT` : where your Bullet build3 directory is located
+
+Then you'll be able to use your favorite compiler and toolchain to build this project.
+
+Was only tested with Visual Studio 14 (2015) x64
+
 
 ## Attribution of original work
 
