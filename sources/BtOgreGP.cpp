@@ -430,9 +430,6 @@ namespace BtOgre {
 	{
 	}
 	//------------------------------------------------------------------------------------------------
-	StaticMeshToShapeConverter::~StaticMeshToShapeConverter()
-	{
-	}
 	//------------------------------------------------------------------------------------------------
 	StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const Matrix4 &transform) :
 		VertexIndexToShape(transform),

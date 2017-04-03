@@ -21,29 +21,48 @@
 #include "BtOgreExtras.h"
 #include "Ogre.h"
 
-namespace BtOgre {
-	typedef std::map<unsigned char, Vector3Array*> BoneIndex;
-	typedef std::pair<unsigned short, Vector3Array*> BoneKeyIndex;
+namespace BtOgre
+{
+	using BoneIndex = std::map<unsigned char, Vector3Array*>;
+	using BoneKeyIndex = std::pair<unsigned short, Vector3Array*>;
 
 	class VertexIndexToShape
 	{
 	public:
 		VertexIndexToShape(const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
-		~VertexIndexToShape();
+		virtual ~VertexIndexToShape();
 
 		Ogre::Real getRadius();
 		Ogre::Vector3 getSize();
 
+		///Return a spherical bullet collision shape from this object
 		btSphereShape* createSphere();
+
+		///Return a box bullet collision shape from this object
 		btBoxShape* createBox();
+
+		///Return a triangular mesh collision shape from this object
 		btBvhTriangleMeshShape* createTrimesh();
+
+		///Return a cynlinder collision shape from this object
 		btCylinderShape* createCylinder();
+
+		///Return a convex hull  collision shape from this object
 		btConvexHullShape* createConvex();
+
+		///Return a capsule shape from this object
 		btCapsuleShape* createCapsule();
 
+		///Get the vertex buffer (array of vector 3)
 		const Ogre::Vector3* getVertices();
+
+		///Get the vertex count (size of vertex buffer) of the object
 		unsigned int getVertexCount();
+
+		///Get the index buffer of the object (array of unsigned ints)
 		const unsigned int* getIndices();
+
+		///Get the index count(size of vertex buffer) from this object
 		unsigned int getIndexCount();
 
 	protected:
@@ -72,17 +91,22 @@ namespace BtOgre {
 		Ogre::Vector3		mScale;
 	};
 
-	//For static (non-animated) meshes.
+	///Shape converter for static (non-animated) meshes.
 	class StaticMeshToShapeConverter : public VertexIndexToShape
 	{
 	public:
-
 		StaticMeshToShapeConverter(Ogre::Renderable *rend, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+
+		///Creaate a messh converter from am V2 mesh object
 		StaticMeshToShapeConverter(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+
+		///Create a mesh converter from a V1 mesh object
 		StaticMeshToShapeConverter(Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+
+		///Default constructor; You can add a mesh/entity later
 		StaticMeshToShapeConverter();
 
-		~StaticMeshToShapeConverter();
+		virtual ~StaticMeshToShapeConverter() = default;
 
 		void addEntity(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
@@ -94,14 +118,14 @@ namespace BtOgre {
 		Ogre::SceneNode*	mNode;
 	};
 
-	//For animated meshes.
+	///For animated meshes.
 	class AnimatedMeshToShapeConverter : public VertexIndexToShape
 	{
 	public:
 
 		AnimatedMeshToShapeConverter(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 		AnimatedMeshToShapeConverter();
-		~AnimatedMeshToShapeConverter();
+		virtual ~AnimatedMeshToShapeConverter();
 
 		void addEntity(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 		void addMesh(const Ogre::v1::MeshPtr &mesh, const Ogre::Matrix4 &transform);
