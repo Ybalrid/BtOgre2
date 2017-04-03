@@ -99,7 +99,7 @@ namespace BtOgre
 		void addLine(const Ogre::Vector3& start, const Ogre::Vector3& end, const Ogre::ColourValue& value);
 
 		///Check if the material actually exist, if it doesn't create it
-		void checkForMaterial();
+		void checkForMaterial() const;
 
 		///Update the content of the manual object with the line buffer
 		void update();

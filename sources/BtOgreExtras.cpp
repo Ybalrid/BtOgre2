@@ -48,19 +48,16 @@ void BtOgre::LineDrawer::addLine(const Ogre::Vector3& start, const Ogre::Vector3
 	lines.push_back({ start, end, value });
 }
 
-void BtOgre::LineDrawer::checkForMaterial()
+void BtOgre::LineDrawer::checkForMaterial() const
 {
-	Ogre::HlmsUnlit* hlmsUnlit = (Ogre::HlmsUnlit*) Ogre::Root::getSingleton().getHlmsManager()->getHlms(Ogre::HLMS_UNLIT);
+	auto hlmsUnlit = static_cast<Ogre::HlmsUnlit*>(Ogre::Root::getSingleton().getHlmsManager()->getHlms(Ogre::HLMS_UNLIT));
 	auto datablock = hlmsUnlit->getDatablock(datablockToUse);
 
 	if (datablock) return;
 	Ogre::LogManager::getSingleton().logMessage("BtOgre's datablock not found, creating...");
 	auto createdDatablock = hlmsUnlit->createDatablock(datablockToUse, datablockToUse, Ogre::HlmsMacroblock(), Ogre::HlmsBlendblock(), Ogre::HlmsParamVec(), true, Ogre::BLANKSTRING, "BtOgre");
 
-	if (!createdDatablock)
-	{
-		Ogre::LogManager::getSingleton().logMessage("Mh. Datablock hasn't been created. Weird.");
-	}
+	if (!createdDatablock) throw std::runtime_error(std::string("BtOgre Line Drawer failed to create HLMS Unlit datablock ") + datablockToUse);
 }
 
 void BtOgre::LineDrawer::update()

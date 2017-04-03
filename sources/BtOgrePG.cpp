@@ -1,15 +1,20 @@
 #include "BtOgrePG.h"
 
-BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node, const btTransform& transform, const btTransform& offset) : mTransform(transform),
-mCenterOfMassOffset(offset),
-mNode(node)
+BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node, const btTransform& transform, const btTransform& offset) :
+	mTransform(transform),
+	mCenterOfMassOffset(offset),
+	mNode(node)
 {
 }
 
-BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node) : mTransform(((node != NULL) ? BtOgre::Convert::toBullet(node->getOrientation()) : btQuaternion(0, 0, 0, 1)),
-((node != NULL) ? BtOgre::Convert::toBullet(node->getPosition()) : btVector3(0, 0, 0))),
-mCenterOfMassOffset(btTransform::getIdentity()),
-mNode(node)
+BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node) :
+	mTransform
+	(
+		node ? Convert::toBullet(node->getOrientation()) : btQuaternion(0, 0, 0, 1),
+		node ? Convert::toBullet(node->getPosition()) : btVector3(0, 0, 0)
+	),
+	mCenterOfMassOffset(btTransform::getIdentity()),
+	mNode(node)
 {
 }
 
