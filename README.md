@@ -2,6 +2,8 @@
 
 BtOgre21 is a simple Bullet-Ogre connection made for Ogre 2.1+
 
+This project is Free and Open Source, licensed under the term of the zLib license agreement (see LICENSE for more informations).
+
 ## Build and usage instructions
 
 You'll need to define some variables for CMake
@@ -18,8 +20,10 @@ This is a forked project from BtOgre, originally created by nikki93 (as of his g
 
 The goal is to reorganise the source code of this project, and also do some cleaning.
 
-## Changes made and current state
+## Changes made from the original verison of BtOgre
 
+ - Modified to compile against Ogre 2.1
+ - Added an overload to construct a static shape converter from an Ogre::v1::MeshPtr
  - Motion states moves "derivated coordinates" instead of the "regular" ones. This prevent unsynchronising graphics and physics if you are doing weird object parenting stuff (in case of physics objects, You probably shouldn't)
  - Class implementation are not in headers
  - Debug drawer re-implemented for Ogre V2 by using a manual object instead of an array of dynamic renderables
