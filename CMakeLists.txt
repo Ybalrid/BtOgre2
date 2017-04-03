@@ -4,6 +4,12 @@ project(BtOgre21)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake-extras/)
 
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /fp:fast")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+endif()
+
 find_package(Bullet REQUIRED)
 find_package(OGRE REQUIRED)
 
