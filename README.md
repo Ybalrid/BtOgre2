@@ -10,11 +10,11 @@ You'll need to define some variables for CMake
  - `BULLET_ROOT` : where your Bullet build3 directory is located
 
 Then you'll be able to use your favorite compiler and toolchain to build this project.
-Was only tested with Visual Studio 14 (2015) x64
+(Was only tested with Visual Studio 14 (2015) x64)
 
 ## Attribution of original work
 
-This is a forked project from BtOgre, originally created by nikki93 (as of his github name), and take root form a fork by nyxkn.
+This is a forked project from BtOgre, originally created by nikki93 (as of his github name), and take root from a fork by nyxkn.
 
 The goal is to reorganise the source code of this project, and also do some cleaning.
 
