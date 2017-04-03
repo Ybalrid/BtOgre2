@@ -20,21 +20,19 @@ void BtOgre::RigidBodyState::getWorldTransform(btTransform& ret) const
 
 void BtOgre::RigidBodyState::setWorldTransform(const btTransform& in)
 {
-	if (mNode == NULL)
-		return;
+	if (!mNode) return;
 
+	//store transform
 	mTransform = in;
-	btTransform transform = in * mCenterOfMassOffset;
 
-	btQuaternion rot = transform.getRotation();
-	btVector3 pos = transform.getOrigin();
+	//extract position and orientation
+	const auto transform = mTransform * mCenterOfMassOffset;
+	const auto rot = transform.getRotation();
+	const auto pos = transform.getOrigin();
 
-	//Hack by Ybalrid : move the world positions instead of the absolute position
-	Ogre::Vector3 ogrePos(pos.x(), pos.y(), pos.z());
-	Ogre::Quaternion ogreRot(rot.w(), rot.x(), rot.y(), rot.z());
-
-	mNode->_setDerivedOrientation(ogreRot);
-	mNode->_setDerivedPosition(ogrePos);
+	//Set to the node
+	mNode->_setDerivedOrientation({ rot.w(), rot.x(), rot.y(), rot.z() });
+	mNode->_setDerivedPosition({ pos.x(), pos.y(), pos.z() });
 }
 
 void BtOgre::RigidBodyState::setNode(Ogre::SceneNode* node)

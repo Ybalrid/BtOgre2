@@ -24,23 +24,36 @@
 namespace BtOgre {
 	//A MotionState is Bullet's way of informing you about updates to an object.
 	//Pass this MotionState to a btRigidBody to have your SceneNode updated automaticaly.
+
+	///RigidBody state to comunicate back the physics movements to the graphics
 	class RigidBodyState : public btMotionState
 	{
 	protected:
+
+		///Object transform
 		btTransform mTransform;
+		///Relative transform between the RigidBody and the pivor of the Ogre Mesh
 		btTransform mCenterOfMassOffset;
 
 		Ogre::SceneNode *mNode;
 
 	public:
+
+		///Create ea rigid body state with a specified transform and offset
 		RigidBodyState(Ogre::SceneNode* node, const btTransform& transform, const btTransform& offset = btTransform::getIdentity());
 
+		///Create a simple rigid body state
 		RigidBodyState(Ogre::SceneNode* node);
 
+		///Get the world transofrm
+		/// \param ret : Output parameter where the transform will be written
 		virtual void getWorldTransform(btTransform& ret) const override;
 
+		///Set the world transform
+		/// \param in : The transform to use. Will change the derivated position in world, not the one relative to the parnet node
 		virtual void setWorldTransform(const btTransform& in) override;
 
+		///Set the node used by this rigid body state
 		void setNode(Ogre::SceneNode* node);
 	};
 
