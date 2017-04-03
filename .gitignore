@@ -12,6 +12,7 @@ CTestTestfile.cmake
 *.vcxproj*
 build/*
 
+documentation/generated/*
 
 demo/BtOgreTest.make
 demo/Makefile
