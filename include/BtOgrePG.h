@@ -14,14 +14,14 @@
  * =====================================================================================
  */
 
-#ifndef _BtOgreGP_H_
-#define _BtOgreGP_H_
+#pragma once
 
-#include "btBulletDynamicsCommon.h"
-#include "OgreSceneNode.h"
+#include <btBulletDynamicsCommon.h>
+#include <OgreSceneNode.h>
 #include "BtOgreExtras.h"
 
-namespace BtOgre {
+namespace BtOgre
+{
 	//A MotionState is Bullet's way of informing you about updates to an object.
 	//Pass this MotionState to a btRigidBody to have your SceneNode updated automaticaly.
 
@@ -59,5 +59,3 @@ namespace BtOgre {
 
 	//Softbody-Ogre connection goes here!
 }
-
-#endif

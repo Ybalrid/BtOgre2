@@ -13,26 +13,25 @@
 * =====================================================================================
 */
 
-#ifndef _BtOgreShapes_H_
-#define _BtOgreShapes_H_
+#pragma once
 
-#include "btBulletDynamicsCommon.h"
-#include "OgreSceneNode.h"
-#include "OgreSimpleRenderable.h"
-#include "OgreCamera.h"
-#include "OgreHardwareBufferManager.h"
-#include "OgreMaterialManager.h"
-#include "OgreTechnique.h"
-#include "OgrePass.h"
-#include "OgreRoot.h"
-#include "OgreHlms.h"
-#include "Hlms/Unlit/OgreHlmsUnlit.h"
-
-#include "OgreLogManager.h"
+#include <btBulletDynamicsCommon.h>
+#include <OgreSceneNode.h>
+#include <OgreSimpleRenderable.h>
+#include <OgreCamera.h>
+#include <OgreHardwareBufferManager.h>
+#include <OgreMaterialManager.h>
+#include <OgreTechnique.h>
+#include <OgrePass.h>
+#include <OgreRoot.h>
+#include <OgreHlms.h>
+#include <Hlms/Unlit/OgreHlmsUnlit.h>
+#include <OgreLogManager.h>
 
 namespace BtOgre
 {
-	typedef std::vector<Ogre::Vector3> Vector3Array;
+	///Type for array of vector "
+	using Vector3Array = std::vector<Ogre::Vector3>;
 
 	///Converts from and to Bullet and Ogre stuff. Pretty self-explanatory.
 	struct Convert
@@ -52,8 +51,6 @@ namespace BtOgre
 		///Bullet -> Ogre Vector 3D
 		static Ogre::Vector3 toOgre(const btVector3& v);
 	};
-
-	//From here on its debug-drawing stuff. ------------------------------------------------------------------
 
 	///Draw the lines Bullet want's you to draw
 	class LineDrawer
@@ -86,10 +83,10 @@ namespace BtOgre
 		int index;
 
 	public:
-
 		///Construct the line drawer, need the name of the scene manager and the datablock (material)
 		LineDrawer(Ogre::SceneNode* node, Ogre::String datablockId, Ogre::String smgrName);
 
+		///Desstroy the line drawer
 		~LineDrawer();
 
 		///Clear the manual object AND the line buffer
@@ -105,20 +102,35 @@ namespace BtOgre
 		void update();
 	};
 
+	///Debug Drawer, permit to visualize and debug the physics
 	class DebugDrawer : public btIDebugDraw
 	{
 	protected:
+		///Node where the debug drawer is attached
 		Ogre::SceneNode *mNode;
+
+		///Pointer to the bullet dynamics world
 		btDynamicsWorld *mWorld;
+
+		///State of the debug draw : define what will be drawn
 		int mDebugOn;
+
+		///Name of the datablock
 		static constexpr char* unlitDatablockName{ "DebugLinesGenerated" };
+
+		///ID of the datblock
 		const Ogre::IdString unlitDatablockId;
 
-		//To accommodate the diffuse color -> light value "change" of meaning of the color of a fragment in HDR pipelines, multiply all colors by this value
+		///To accommodate the diffuse color -> light value "change" of meaning of the color of a fragment in HDR pipelines, multiply all colors by this value
 		float unlitDiffuseMultiplier;
 
+		///Has been stepped already this frame
 		bool stepped;
+
+		///The name of the scene manager to get
 		Ogre::String scene;
+
+		///The LineDrawer : Object that draw lines.
 		LineDrawer drawer;
 
 	public:
@@ -128,32 +140,31 @@ namespace BtOgre
 		/// \param smgrName Name of the scene manager you are using
 		DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, Ogre::String smgrName = "MAIN_SMGR");
 
-		virtual ~DebugDrawer();
+		///Default polymorphic destructor
+		virtual ~DebugDrawer() = default;
 
 		///Set the value to multiply the texure. >= 1. Usefull only for HDR rendering
 		void setUnlitDiffuseMultiplier(float value);
 
 		///For bullet : add a line to the drawer
-		virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override;
+		void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override;
 
 		///Dummy. Rendering text is hard :D
-		virtual void draw3dText(const btVector3& location, const char* textString) override;
+		void draw3dText(const btVector3& location, const char* textString) override;
 
 		///Just render the contact point wit a line
-		virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override;
+		void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override;
 
 		///Redirect erros to the Ogre default log
-		virtual void reportErrorWarning(const char* warningString) override;
+		void reportErrorWarning(const char* warningString) override;
 
 		///Set the debug mode. Acceptable values are combinations of the flags defined by btIDebugDraw::DebugDrawModes
-		virtual void setDebugMode(int isOn) override;
+		void setDebugMode(int isOn) override;
 
 		///get the current debug mode
-		virtual int getDebugMode() const override;
+		int getDebugMode() const override;
 
 		///Step the debug drawer
 		void step();
 	};
 }
-
-#endif

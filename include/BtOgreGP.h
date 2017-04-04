@@ -14,12 +14,12 @@
  * =====================================================================================
  */
 
-#ifndef _BtOgrePG_H_
-#define _BtOgrePG_H_
+#pragma once
 
-#include "btBulletDynamicsCommon.h"
+#include <btBulletDynamicsCommon.h>
+#include <Ogre.h>
+
 #include "BtOgreExtras.h"
-#include "Ogre.h"
 
 namespace BtOgre
 {
@@ -159,5 +159,3 @@ namespace BtOgre
 		size_t               mTransformedVerticesTempSize;
 	};
 }
-
-#endif

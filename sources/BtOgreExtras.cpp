@@ -102,10 +102,6 @@ BtOgre::DebugDrawer::DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, 
 		Ogre::ResourceGroupManager::getSingleton().createResourceGroup("BtOgre");
 }
 
-BtOgre::DebugDrawer::~DebugDrawer()
-{
-}
-
 void BtOgre::DebugDrawer::setUnlitDiffuseMultiplier(float value)
 {
 	if (value >= 1) unlitDiffuseMultiplier = value;

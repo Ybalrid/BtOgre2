@@ -19,7 +19,8 @@
 
 using namespace Ogre;
 
-namespace BtOgre {
+namespace BtOgre
+{
 	/*
 	 * =============================================================================================
 	 * BtOgre::VertexIndexToShape
