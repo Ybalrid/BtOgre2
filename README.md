@@ -1,6 +1,7 @@
 # BtOgre21 - Simple Bullet-Ogre 2.1 connection
 
-[![Build status](https://ci.appveyor.com/api/projects/status/imiecnoy3xuk71yw?svg=true)](https://ci.appveyor.com/project/Ybalrid/btogre21)
+
+Master branch on AppVeyor : [![Build status](https://ci.appveyor.com/api/projects/status/imiecnoy3xuk71yw/branch/master?svg=true)](https://ci.appveyor.com/project/Ybalrid/btogre21/branch/master)
 
 
 BtOgre21 is a simple Bullet-Ogre connection made for Ogre 2.1+
