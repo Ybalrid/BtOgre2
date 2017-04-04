@@ -31,11 +31,9 @@ void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
 	if (!vertex_data)
 		return;
 
-	const v1::VertexData *data = vertex_data;
-
 	//Increase size of vertex buffer to append the new data
 	const unsigned int prev_size = mVertexCount;
-	mVertexCount += static_cast<unsigned int>(data->vertexCount);
+	mVertexCount += static_cast<unsigned int>(vertex_data->vertexCount);
 
 	//Create a new array to hold the new vertex buffer
 	Vector3* tmp_vert = new Vector3[mVertexCount];
@@ -54,8 +52,8 @@ void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
 	mVertexBuffer = tmp_vert;
 
 	// Get the positional buffer element
-	const v1::VertexElement* posElem = data->vertexDeclaration->findElementBySemantic(VES_POSITION);
-	v1::HardwareVertexBufferSharedPtr vbuf = data->vertexBufferBinding->getBuffer(posElem->getSource());
+	const v1::VertexElement* posElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_POSITION);
+	v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
 	const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
 
 	//Get read only access to the row buffer
@@ -64,7 +62,7 @@ void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
 
 	//Write data to the vertex buffer
 	Vector3 * curVertices = &mVertexBuffer[prev_size];
-	const unsigned int vertexCount = static_cast<unsigned int>(data->vertexCount);
+	const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
 	for (unsigned int j = 0; j < vertexCount; ++j)
 	{
 		//Get pointer to the start of this vertex
@@ -176,25 +174,33 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 
 void VertexIndexToShape::addIndexData(v1::IndexData *data, const unsigned int offset)
 {
+	//Store the current index count and augment it to fit the neww data
 	const unsigned int prev_size = mIndexCount;
 	mIndexCount += static_cast<unsigned int>(data->indexCount);
 
+	//Allocate a new array for storing all the data, if we already had one, copy and clear it
 	unsigned int* tmp_ind = new unsigned int[mIndexCount];
 	if (mIndexBuffer)
 	{
 		memcpy(tmp_ind, mIndexBuffer, sizeof(unsigned int) * prev_size);
 		delete[] mIndexBuffer;
 	}
+
+	//Set this array to be the current index buffer
 	mIndexBuffer = tmp_ind;
 
+	//Get the number of tirangles by dividing by 3 the number of indexes
 	const unsigned int numTris = static_cast<unsigned int>(data->indexCount) / 3;
 	v1::HardwareIndexBufferSharedPtr ibuf = data->indexBuffer;
+
+	//Test if we need to read 16 or 32 bit indexes
 	const bool use32bitindexes = (ibuf->getType() == v1::HardwareIndexBuffer::IT_32BIT);
 	unsigned int index_offset = prev_size;
 
 	if (use32bitindexes)
 	{
 		const unsigned int* pInt = static_cast<unsigned int*>(ibuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
+		//Store the indices for the 3 vertex of this triangle
 		for (unsigned int k = 0; k < numTris; ++k)
 		{
 			mIndexBuffer[index_offset++] = offset + *pInt++;
