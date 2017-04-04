@@ -33,44 +33,60 @@ void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
 
 	const v1::VertexData *data = vertex_data;
 
+	//Increase size of vertex buffer to append the new data
 	const unsigned int prev_size = mVertexCount;
 	mVertexCount += static_cast<unsigned int>(data->vertexCount);
 
+	//Create a new array to hold the new vertex buffer
 	Vector3* tmp_vert = new Vector3[mVertexCount];
+
+	//If the vertex buffer existed before
 	if (mVertexBuffer)
 	{
+		//Copy the old data to the new array
 		memcpy(tmp_vert, mVertexBuffer, sizeof(Vector3) * prev_size);
+
+		//Free the old array
 		delete[] mVertexBuffer;
 	}
+
+	//Set this pointer to the new array
 	mVertexBuffer = tmp_vert;
 
 	// Get the positional buffer element
+	const v1::VertexElement* posElem = data->vertexDeclaration->findElementBySemantic(VES_POSITION);
+	v1::HardwareVertexBufferSharedPtr vbuf = data->vertexBufferBinding->getBuffer(posElem->getSource());
+	const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
+
+	//Get read only access to the row buffer
+	unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
+	float* pReal; // this pointer will be used a a buffer to write the [float, float, float] array of the vertex
+
+	//Write data to the vertex buffer
+	Vector3 * curVertices = &mVertexBuffer[prev_size];
+	const unsigned int vertexCount = static_cast<unsigned int>(data->vertexCount);
+	for (unsigned int j = 0; j < vertexCount; ++j)
 	{
-		const v1::VertexElement* posElem = data->vertexDeclaration->findElementBySemantic(VES_POSITION);
-		v1::HardwareVertexBufferSharedPtr vbuf = data->vertexBufferBinding->getBuffer(posElem->getSource());
-		const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
+		//Get pointer to the start of this vertex
+		posElem->baseVertexPointerToElement(vertex, &pReal);
+		vertex += vSize;
 
-		unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-		float* pReal;
-		Vector3 * curVertices = &mVertexBuffer[prev_size];
-		const unsigned int vertexCount = static_cast<unsigned int>(data->vertexCount);
-		for (unsigned int j = 0; j < vertexCount; ++j)
-		{
-			posElem->baseVertexPointerToElement(vertex, &pReal);
-			vertex += vSize;
+		//Write data
+		curVertices->x = *pReal++;
+		curVertices->y = *pReal++;
+		curVertices->z = *pReal++;
 
-			curVertices->x = *pReal++;
-			curVertices->y = *pReal++;
-			curVertices->z = *pReal++;
+		//Apply transform
+		*curVertices = mTransform * *curVertices;
 
-			*curVertices = mTransform * *curVertices;
-
-			curVertices++;
-		}
-		vbuf->unlock();
+		//Go to next
+		curVertices++;
 	}
+
+	//Release vertex buffer opened in read only
+	vbuf->unlock();
 }
-//------------------------------------------------------------------------------------------------
+
 void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data,
 	const v1::VertexData *blend_data,
 	const v1::Mesh::IndexMap *indexMap)
@@ -157,7 +173,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 		vbuf->unlock();
 	}
 }
-//------------------------------------------------------------------------------------------------
+
 void VertexIndexToShape::addIndexData(v1::IndexData *data, const unsigned int offset)
 {
 	const unsigned int prev_size = mIndexCount;
@@ -199,7 +215,7 @@ void VertexIndexToShape::addIndexData(v1::IndexData *data, const unsigned int of
 		ibuf->unlock();
 	}
 }
-//------------------------------------------------------------------------------------------------
+
 Real VertexIndexToShape::getRadius()
 {
 	if (mBoundRadius == (-1))
@@ -209,7 +225,7 @@ Real VertexIndexToShape::getRadius()
 	}
 	return mBoundRadius;
 }
-//------------------------------------------------------------------------------------------------
+
 Vector3 VertexIndexToShape::getSize()
 {
 	const unsigned int vCount = getVertexCount();
@@ -238,28 +254,24 @@ Vector3 VertexIndexToShape::getSize()
 
 	return mBounds;
 }
-//------------------------------------------------------------------------------------------------
+
 const Vector3* VertexIndexToShape::getVertices()
 {
 	return mVertexBuffer;
 }
-//------------------------------------------------------------------------------------------------
 unsigned int VertexIndexToShape::getVertexCount()
 {
 	return mVertexCount;
 }
-//------------------------------------------------------------------------------------------------
 const unsigned int* VertexIndexToShape::getIndices()
 {
 	return mIndexBuffer;
 }
-//------------------------------------------------------------------------------------------------
 unsigned int VertexIndexToShape::getIndexCount()
 {
 	return mIndexCount;
 }
 
-//------------------------------------------------------------------------------------------------
 btSphereShape* VertexIndexToShape::createSphere()
 {
 	const Real rad = getRadius();
@@ -271,7 +283,7 @@ btSphereShape* VertexIndexToShape::createSphere()
 
 	return shape;
 }
-//------------------------------------------------------------------------------------------------
+
 btBoxShape* VertexIndexToShape::createBox()
 {
 	const Vector3 sz = getSize();
@@ -285,7 +297,7 @@ btBoxShape* VertexIndexToShape::createBox()
 
 	return shape;
 }
-//------------------------------------------------------------------------------------------------
+
 btCylinderShape* VertexIndexToShape::createCylinder()
 {
 	const Vector3 sz = getSize();
@@ -299,7 +311,6 @@ btCylinderShape* VertexIndexToShape::createCylinder()
 
 	return shape;
 }
-//------------------------------------------------------------------------------------------------
 btConvexHullShape* VertexIndexToShape::createConvex()
 {
 	assert(mVertexCount && (mIndexCount >= 6) &&
@@ -311,7 +322,6 @@ btConvexHullShape* VertexIndexToShape::createConvex()
 
 	return shape;
 }
-//------------------------------------------------------------------------------------------------
 btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 {
 	assert(mVertexCount && (mIndexCount >= 6) &&
@@ -357,7 +367,6 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 
 	return shape;
 }
-//------------------------------------------------------------------------------------------------
 btCapsuleShape* VertexIndexToShape::createCapsule() {
 	const Vector3 sz = getSize();
 
@@ -386,7 +395,6 @@ btCapsuleShape* VertexIndexToShape::createCapsule() {
 
 	return shape;
 }
-//------------------------------------------------------------------------------------------------
 VertexIndexToShape::~VertexIndexToShape()
 {
 	delete[] mVertexBuffer;
@@ -403,7 +411,6 @@ VertexIndexToShape::~VertexIndexToShape()
 		delete mBoneIndex;
 	}
 }
-//------------------------------------------------------------------------------------------------
 VertexIndexToShape::VertexIndexToShape(const Matrix4 &transform) :
 	mVertexBuffer(nullptr),
 	mIndexBuffer(nullptr),
@@ -429,7 +436,6 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter() :
 	mNode(nullptr)
 {
 }
-//------------------------------------------------------------------------------------------------
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
@@ -437,7 +443,6 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const
 {
 	addEntity(entity, transform);
 }
-//------------------------------------------------------------------------------------------------
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
@@ -445,7 +450,6 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Mat
 {
 	addMesh(mesh, transform);
 }
-//------------------------------------------------------------------------------------------------
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
@@ -457,7 +461,6 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const M
 	if (op.useIndexes)
 		addIndexData(op.indexData);
 }
-//------------------------------------------------------------------------------------------------
 void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius
@@ -490,7 +493,6 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 		}
 	}
 }
-//------------------------------------------------------------------------------------------------
 void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius

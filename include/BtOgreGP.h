@@ -25,6 +25,8 @@ namespace BtOgre
 {
 	using BoneIndex = std::map<unsigned char, Vector3Array*>;
 	using BoneKeyIndex = std::pair<unsigned short, Vector3Array*>;
+	using VertexBuffer = std::vector<Ogre::Vector3>;
+	using IndexBuffer = std::vector<unsigned int>;
 
 	class VertexIndexToShape
 	{
