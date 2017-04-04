@@ -1,13 +1,16 @@
 #include "BtOgrePG.h"
 
-BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node, const btTransform& transform, const btTransform& offset) :
+using namespace Ogre;
+using namespace BtOgre;
+
+RigidBodyState::RigidBodyState(SceneNode* node, const btTransform& transform, const btTransform& offset) :
 	mTransform(transform),
 	mCenterOfMassOffset(offset),
 	mNode(node)
 {
 }
 
-BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node) :
+RigidBodyState::RigidBodyState(SceneNode* node) :
 	mTransform
 	(
 		node ? Convert::toBullet(node->getOrientation()) : btQuaternion(0, 0, 0, 1),
@@ -18,12 +21,12 @@ BtOgre::RigidBodyState::RigidBodyState(Ogre::SceneNode* node) :
 {
 }
 
-void BtOgre::RigidBodyState::getWorldTransform(btTransform& ret) const
+void RigidBodyState::getWorldTransform(btTransform& ret) const
 {
 	ret = mTransform;
 }
 
-void BtOgre::RigidBodyState::setWorldTransform(const btTransform& in)
+void RigidBodyState::setWorldTransform(const btTransform& in)
 {
 	if (!mNode) return;
 
@@ -40,7 +43,7 @@ void BtOgre::RigidBodyState::setWorldTransform(const btTransform& in)
 	mNode->_setDerivedPosition({ pos.x(), pos.y(), pos.z() });
 }
 
-void BtOgre::RigidBodyState::setNode(Ogre::SceneNode* node)
+void RigidBodyState::setNode(SceneNode* node)
 {
 	mNode = node;
 }
