@@ -71,6 +71,8 @@ namespace BtOgre
 		///Get the index count(size of vertex buffer) from this object
 		unsigned int getIndexCount();
 
+		unsigned int getTriangleCount();
+
 	protected:
 
 		void appendVertexData(const Ogre::v1::VertexData *vertex_data);

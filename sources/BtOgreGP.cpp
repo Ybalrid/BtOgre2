@@ -81,48 +81,46 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	// Get the positional buffer element
 	appendVertexData(data);
 
+	const v1::VertexElement* bneElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_BLEND_INDICES);
+	assert(bneElem);
+
+	v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(bneElem->getSource());
+	const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
+	unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
+
+	unsigned char* pBone;
+
+	if (!mBoneIndex)
+		mBoneIndex = new BoneIndex();
+	BoneIndex::iterator i;
+
+	///Todo : get rid of that
+	Vector3 * curVertices = &mVertexBuffer.data()[prev_size];
+
+	const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
+	for (unsigned int j = 0; j < vertexCount; ++j)
 	{
-		const v1::VertexElement* bneElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_BLEND_INDICES);
-		assert(bneElem);
+		bneElem->baseVertexPointerToElement(vertex, &pBone);
+		vertex += vSize;
 
-		v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(bneElem->getSource());
-		const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
-		unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-
-		unsigned char* pBone;
-
-		if (!mBoneIndex)
-			mBoneIndex = new BoneIndex();
-		BoneIndex::iterator i;
-
-		///Todo : get rid of that
-		Vector3 * curVertices = &mVertexBuffer.data()[prev_size];
-
-		const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
-		for (unsigned int j = 0; j < vertexCount; ++j)
+		const unsigned char currBone = (indexMap) ? (*indexMap)[*pBone] : *pBone;
+		i = mBoneIndex->find(currBone);
+		Vector3Array* l = nullptr;
+		if (i == mBoneIndex->end())
 		{
-			bneElem->baseVertexPointerToElement(vertex, &pBone);
-			vertex += vSize;
-
-			const unsigned char currBone = (indexMap) ? (*indexMap)[*pBone] : *pBone;
-			i = mBoneIndex->find(currBone);
-			Vector3Array* l = nullptr;
-			if (i == mBoneIndex->end())
-			{
-				l = new Vector3Array;
-				mBoneIndex->insert(BoneKeyIndex(currBone, l));
-			}
-			else
-			{
-				l = i->second;
-			}
-
-			l->push_back(*curVertices);
-
-			curVertices++;
+			l = new Vector3Array;
+			mBoneIndex->insert(BoneKeyIndex(currBone, l));
 		}
-		vbuf->unlock();
+		else
+		{
+			l = i->second;
+		}
+
+		l->push_back(*curVertices);
+
+		curVertices++;
 	}
+	vbuf->unlock();
 }
 
 void VertexIndexToShape::appendIndexData(v1::IndexData *data, const unsigned int offset)
@@ -198,6 +196,11 @@ unsigned int VertexIndexToShape::getIndexCount()
 	return mIndexBuffer.size();
 }
 
+inline unsigned VertexIndexToShape::getTriangleCount()
+{
+	return getIndexCount() / 3;
+}
+
 btSphereShape* VertexIndexToShape::createSphere()
 {
 	const Real rad = getRadius();
@@ -254,7 +257,7 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
 	//Todo: create a "get triangle count" method
-	unsigned int numFaces = getIndexCount() / 3;
+	unsigned int numFaces = getTriangleCount();
 
 	btTriangleMesh *trimesh = new btTriangleMesh();
 
