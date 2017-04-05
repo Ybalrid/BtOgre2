@@ -25,7 +25,11 @@ namespace BtOgre
 {
 	using BoneIndex = std::map<unsigned char, Vector3Array*>;
 	using BoneKeyIndex = std::pair<unsigned short, Vector3Array*>;
+
+	///Type of a vertex buffer is an vector of Vector3
 	using VertexBuffer = std::vector<Ogre::Vector3>;
+
+	///Type of an index buffer is an array of unsigned ints
 	using IndexBuffer = std::vector<unsigned int>;
 
 	class VertexIndexToShape
@@ -69,11 +73,23 @@ namespace BtOgre
 
 	protected:
 
-		void addStaticVertexData(const Ogre::v1::VertexData *vertex_data);
+		void appendVertexData(const Ogre::v1::VertexData *vertex_data);
 
 		void addAnimatedVertexData(const Ogre::v1::VertexData *vertex_data,
 			const Ogre::v1::VertexData *blended_data,
 			const Ogre::v1::Mesh::IndexMap *indexMap);
+
+		template<typename T> void loadV1IndexBuffer(Ogre::v1::HardwareIndexBufferSharedPtr ibuf, const unsigned int& offset,
+			const size_t& previousSize, const size_t& appendedIndexes)
+		{
+			auto pointerData = static_cast<T*>(ibuf->lock(Ogre::v1::HardwareBuffer::HBL_READ_ONLY));
+			//Store the indices for the 3 vertex of this triangle
+			for (auto i = 0u; i < appendedIndexes; ++i)
+			{
+				mIndexBuffer[previousSize + i] = (offset + *pointerData++);
+			}
+			ibuf->unlock();
+		}
 
 		void addIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 

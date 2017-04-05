@@ -31,14 +31,20 @@ void log(const std::string& message)
 	Ogre::LogManager::getSingleton().logMessage("BtOgreLog : " + message);
 }
 
-void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
+void VertexIndexToShape::appendVertexData(const v1::VertexData *vertex_data)
 {
 	if (!vertex_data)
 		return;
 
+	const auto previousSize = mVertexBuffer.size();
+
+	//Resize to fit new data
+	mVertexBuffer.resize(previousSize + vertex_data->vertexCount);
+
 	// Get the positional buffer element
 	const v1::VertexElement* posElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_POSITION);
 	v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
+
 	const unsigned int vertexSize = static_cast<unsigned int>(vbuf->getVertexSize());
 
 	//Get read only access to the row buffer
@@ -53,7 +59,7 @@ void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
 		posElem->baseVertexPointerToElement(vertex, &rawVertex);
 		vertex += vertexSize;
 
-		mVertexBuffer.push_back(mTransform * Vector3{ rawVertex });
+		mVertexBuffer[previousSize + j] = (mTransform * Vector3{ rawVertex });
 	}
 
 	//Release vertex buffer opened in read only
@@ -73,26 +79,8 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	const auto prev_size = mVertexBuffer.size();
 
 	// Get the positional buffer element
-	{
-		const v1::VertexElement* posElem = data->vertexDeclaration->findElementBySemantic(VES_POSITION);
-		assert(posElem);
-		v1::HardwareVertexBufferSharedPtr vbuf = data->vertexBufferBinding->getBuffer(posElem->getSource());
-		const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
+	appendVertexData(data);
 
-		//TODO this is duplicated code. Extract it to a method
-		unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-		float* pReal;
-		const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
-		for (unsigned int j = 0; j < vertexCount; ++j)
-		{
-			//Get pointer to the start of this vertex
-			posElem->baseVertexPointerToElement(vertex, &pReal);
-			vertex += vSize;
-
-			mVertexBuffer.push_back(mTransform * Vector3{ pReal });
-		}
-		vbuf->unlock();
-	}
 	{
 		const v1::VertexElement* bneElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_BLEND_INDICES);
 		assert(bneElem);
@@ -139,33 +127,18 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 
 void VertexIndexToShape::addIndexData(v1::IndexData *data, const unsigned int offset)
 {
-	const size_t appendedIndexes = data->indexCount;
+	const auto appendedIndexes = data->indexCount;
+	const auto previousSize = mIndexBuffer.size();
+
+	mIndexBuffer.resize(previousSize + appendedIndexes);
 
 	v1::HardwareIndexBufferSharedPtr ibuf = data->indexBuffer;
 
 	//Test if we need to read 16 or 32 bit indexes
-	const bool use32bitindexes = (ibuf->getType() == v1::HardwareIndexBuffer::IT_32BIT);
-
-	//todo: have just one loop here
-	if (use32bitindexes)
-	{
-		const unsigned int* pInt = static_cast<unsigned int*>(ibuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-		//Store the indices for the 3 vertex of this triangle
-		for (unsigned int k = 0; k < appendedIndexes; ++k)
-		{
-			mIndexBuffer.push_back(offset + *pInt++);
-		}
-		ibuf->unlock();
-	}
+	if (ibuf->getType() == v1::HardwareIndexBuffer::IT_32BIT)
+		loadV1IndexBuffer<uint32_t>(ibuf, offset, previousSize, appendedIndexes);
 	else
-	{
-		const unsigned short* pShort = static_cast<unsigned short*>(ibuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-		for (unsigned int k = 0; k < appendedIndexes; ++k)
-		{
-			mIndexBuffer.push_back(offset + *pShort++);
-		}
-		ibuf->unlock();
-	}
+		loadV1IndexBuffer<uint16_t>(ibuf, offset, previousSize, appendedIndexes);
 }
 
 Real VertexIndexToShape::getRadius()
@@ -407,7 +380,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const M
 {
 	v1::RenderOperation op;
 	rend->getRenderOperation(op, false);
-	addStaticVertexData(op.vertexData);
+	appendVertexData(op.vertexData);
 	if (op.useIndexes)
 		addIndexData(op.indexData);
 }
@@ -425,7 +398,7 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 
 	if (mEntity->getMesh()->sharedVertexData[0])
 	{
-		addStaticVertexData(mEntity->getMesh()->sharedVertexData[0]);
+		appendVertexData(mEntity->getMesh()->sharedVertexData[0]);
 	}
 
 	for (unsigned int i = 0; i < mEntity->getNumSubEntities(); ++i)
@@ -435,7 +408,7 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 		if (!sub_mesh->useSharedVertices)
 		{
 			addIndexData(sub_mesh->indexData[0], getVertexCount());
-			addStaticVertexData(sub_mesh->vertexData[0]);
+			appendVertexData(sub_mesh->vertexData[0]);
 		}
 		else
 		{
@@ -459,7 +432,7 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 
 	if (mesh->sharedVertexData[0])
 	{
-		addStaticVertexData(mesh->sharedVertexData[0]);
+		appendVertexData(mesh->sharedVertexData[0]);
 	}
 
 	for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
@@ -469,7 +442,7 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 		if (!sub_mesh->useSharedVertices)
 		{
 			addIndexData(sub_mesh->indexData[0], getVertexCount());
-			addStaticVertexData(sub_mesh->vertexData[0]);
+			appendVertexData(sub_mesh->vertexData[0]);
 		}
 		else
 		{
