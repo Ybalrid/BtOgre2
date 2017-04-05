@@ -71,6 +71,7 @@ namespace BtOgre
 		///Get the index count(size of vertex buffer) from this object
 		unsigned int getIndexCount();
 
+		///Get the number of triangles
 		unsigned int getTriangleCount();
 
 	protected:
@@ -99,14 +100,14 @@ namespace BtOgre
 		VertexBuffer	mVertexBuffer;
 		IndexBuffer		mIndexBuffer;
 
-		Ogre::Vector3		mBounds;
-		Ogre::Real		    mBoundRadius;
+		Ogre::Vector3	mBounds;
+		Ogre::Real		mBoundRadius;
 
-		BoneIndex           *mBoneIndex;
+		BoneIndex*		mBoneIndex;
 
-		Ogre::Matrix4		mTransform;
+		Ogre::Matrix4	mTransform;
 
-		Ogre::Vector3		mScale;
+		Ogre::Vector3	mScale;
 	};
 
 	///Shape converter for static (non-animated) meshes.
