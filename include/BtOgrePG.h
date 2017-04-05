@@ -35,6 +35,7 @@ namespace BtOgre
 		///Relative transform between the RigidBody and the pivor of the Ogre Mesh
 		btTransform mCenterOfMassOffset;
 
+		///Node that this motion state is affecting
 		Ogre::SceneNode *mNode;
 
 	public:
@@ -47,11 +48,11 @@ namespace BtOgre
 
 		///Get the world transofrm
 		/// \param ret : Output parameter where the transform will be written
-		virtual void getWorldTransform(btTransform& ret) const override;
+		void getWorldTransform(btTransform& ret) const override;
 
 		///Set the world transform
 		/// \param in : The transform to use. Will change the derivated position in world, not the one relative to the parnet node
-		virtual void setWorldTransform(const btTransform& in) override;
+		void setWorldTransform(const btTransform& in) override;
 
 		///Set the node used by this rigid body state
 		void setNode(Ogre::SceneNode* node);
