@@ -6,10 +6,10 @@
  *    Description:  The part of BtOgre that handles information transfer from Ogre to
  *                  Bullet (like mesh data for making trimeshes).
  *
- *        Version:  1.0
+ *        Version:  1.1
  *        Created:  27/12/2008 03:29:56 AM
  *
- *         Author:  Nikhilesh (nikki)
+ *         Author:  Nikhilesh (nikki); Arthur Brainville (Ybalrid)
  *
  * =====================================================================================
  */
@@ -25,7 +25,11 @@ namespace BtOgre
 {
 	using BoneIndex = std::map<unsigned char, Vector3Array*>;
 	using BoneKeyIndex = std::pair<unsigned short, Vector3Array*>;
+
+	///Type of a vertex buffer is an vector of Vector3
 	using VertexBuffer = std::vector<Ogre::Vector3>;
+
+	///Type of an index buffer is an array of unsigned ints
 	using IndexBuffer = std::vector<unsigned int>;
 
 	class VertexIndexToShape
@@ -67,30 +71,43 @@ namespace BtOgre
 		///Get the index count(size of vertex buffer) from this object
 		unsigned int getIndexCount();
 
+		///Get the number of triangles
+		unsigned int getTriangleCount();
+
 	protected:
 
-		void addStaticVertexData(const Ogre::v1::VertexData *vertex_data);
+		void appendVertexData(const Ogre::v1::VertexData *vertex_data);
 
 		void addAnimatedVertexData(const Ogre::v1::VertexData *vertex_data,
 			const Ogre::v1::VertexData *blended_data,
 			const Ogre::v1::Mesh::IndexMap *indexMap);
 
-		void addIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
+		template<typename T> void loadV1IndexBuffer(Ogre::v1::HardwareIndexBufferSharedPtr ibuf, const unsigned int& offset,
+			const size_t& previousSize, const size_t& appendedIndexes)
+		{
+			auto pointerData = static_cast<T*>(ibuf->lock(Ogre::v1::HardwareBuffer::HBL_READ_ONLY));
+			//Store the indices for the 3 vertex of this triangle
+			for (auto i = 0u; i < appendedIndexes; ++i)
+			{
+				mIndexBuffer[previousSize + i] = (offset + *pointerData++);
+			}
+			ibuf->unlock();
+		}
+
+		void appendIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
 	protected:
-		Ogre::Vector3*	    mVertexBuffer;
-		unsigned int*       mIndexBuffer;
-		unsigned int        mVertexCount;
-		unsigned int        mIndexCount;
+		VertexBuffer	mVertexBuffer;
+		IndexBuffer		mIndexBuffer;
 
-		Ogre::Vector3		mBounds;
-		Ogre::Real		    mBoundRadius;
+		Ogre::Vector3	mBounds;
+		Ogre::Real		mBoundRadius;
 
-		BoneIndex           *mBoneIndex;
+		BoneIndex*		mBoneIndex;
 
-		Ogre::Matrix4		mTransform;
+		Ogre::Matrix4	mTransform;
 
-		Ogre::Vector3		mScale;
+		Ogre::Vector3	mScale;
 	};
 
 	///Shape converter for static (non-animated) meshes.
