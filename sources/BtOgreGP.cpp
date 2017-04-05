@@ -125,7 +125,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	}
 }
 
-void VertexIndexToShape::addIndexData(v1::IndexData *data, const unsigned int offset)
+void VertexIndexToShape::appendIndexData(v1::IndexData *data, const unsigned int offset)
 {
 	const auto appendedIndexes = data->indexCount;
 	const auto previousSize = mIndexBuffer.size();
@@ -382,7 +382,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const M
 	rend->getRenderOperation(op, false);
 	appendVertexData(op.vertexData);
 	if (op.useIndexes)
-		addIndexData(op.indexData);
+		appendIndexData(op.indexData);
 }
 void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &transform)
 {
@@ -407,12 +407,12 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], getVertexCount());
+			appendIndexData(sub_mesh->indexData[0], getVertexCount());
 			appendVertexData(sub_mesh->vertexData[0]);
 		}
 		else
 		{
-			addIndexData(sub_mesh->indexData[0]);
+			appendIndexData(sub_mesh->indexData[0]);
 		}
 	}
 }
@@ -441,12 +441,12 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], getVertexCount());
+			appendIndexData(sub_mesh->indexData[0], getVertexCount());
 			appendVertexData(sub_mesh->vertexData[0]);
 		}
 		else
 		{
-			addIndexData(sub_mesh->indexData[0]);
+			appendIndexData(sub_mesh->indexData[0]);
 		}
 	}
 }
@@ -510,7 +510,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], getVertexCount());
+			appendIndexData(sub_mesh->indexData[0], getVertexCount());
 
 			addAnimatedVertexData(sub_mesh->vertexData[0],
 				mEntity->getSubEntity(i)->_getSkelAnimVertexData(),
@@ -518,7 +518,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 		}
 		else
 		{
-			addIndexData(sub_mesh->indexData[0]);
+			appendIndexData(sub_mesh->indexData[0]);
 		}
 	}
 
@@ -551,7 +551,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], getVertexCount());
+			appendIndexData(sub_mesh->indexData[0], getVertexCount());
 
 			addAnimatedVertexData(sub_mesh->vertexData[0],
 				nullptr,
@@ -559,7 +559,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 		}
 		else
 		{
-			addIndexData(sub_mesh->indexData[0]);
+			appendIndexData(sub_mesh->indexData[0]);
 		}
 	}
 }

@@ -91,11 +91,11 @@ namespace BtOgre
 			ibuf->unlock();
 		}
 
-		void addIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
+		void appendIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
 	protected:
-		VertexBuffer	    mVertexBuffer;
-		IndexBuffer       mIndexBuffer;
+		VertexBuffer	mVertexBuffer;
+		IndexBuffer		mIndexBuffer;
 
 		Ogre::Vector3		mBounds;
 		Ogre::Real		    mBoundRadius;
