@@ -6,10 +6,10 @@
  *    Description:  The part of BtOgre that handles information transfer from Ogre to
  *                  Bullet (like mesh data for making trimeshes).
  *
- *        Version:  1.0
+ *        Version:  1.1
  *        Created:  27/12/2008 03:29:56 AM
  *
- *         Author:  Nikhilesh (nikki)
+ *         Author:  Nikhilesh (nikki); Arthur Brainville (Ybalrid)
  *
  * =====================================================================================
  */
@@ -78,10 +78,8 @@ namespace BtOgre
 		void addIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
 	protected:
-		Ogre::Vector3*	    mVertexBuffer;
-		unsigned int*       mIndexBuffer;
-		unsigned int        mVertexCount;
-		unsigned int        mIndexCount;
+		VertexBuffer	    mVertexBuffer;
+		IndexBuffer       mIndexBuffer;
 
 		Ogre::Vector3		mBounds;
 		Ogre::Real		    mBoundRadius;

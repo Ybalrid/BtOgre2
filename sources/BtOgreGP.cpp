@@ -1,14 +1,14 @@
 /*
  * =============================================================================================
  *
- *       Filename:  BtOgre.cpp
+ *       Filename:  BtOgreGP.cpp
  *
- *    Description:  BtOgre implementation.
+ *    Description:  BtOgre "Graphics to Physics" implementation.
  *
- *        Version:  1.0
+ *        Version:  1.1
  *        Created:  27/12/2008 01:47:56 PM
  *
- *         Author:  Nikhilesh (nikki)
+ *         Author:  Nikhilesh (nikki), Arthur Brainville (Ybalrid)
  *
  * =============================================================================================
  */
@@ -26,59 +26,34 @@ using namespace BtOgre;
  * =============================================================================================
  */
 
+void log(const std::string& message)
+{
+	Ogre::LogManager::getSingleton().logMessage("BtOgreLog : " + message);
+}
+
 void VertexIndexToShape::addStaticVertexData(const v1::VertexData *vertex_data)
 {
 	if (!vertex_data)
 		return;
 
-	//Increase size of vertex buffer to append the new data
-	const unsigned int prev_size = mVertexCount;
-	mVertexCount += static_cast<unsigned int>(vertex_data->vertexCount);
-
-	//Create a new array to hold the new vertex buffer
-	Vector3* tmp_vert = new Vector3[mVertexCount];
-
-	//If the vertex buffer existed before
-	if (mVertexBuffer)
-	{
-		//Copy the old data to the new array
-		memcpy(tmp_vert, mVertexBuffer, sizeof(Vector3) * prev_size);
-
-		//Free the old array
-		delete[] mVertexBuffer;
-	}
-
-	//Set this pointer to the new array
-	mVertexBuffer = tmp_vert;
-
 	// Get the positional buffer element
 	const v1::VertexElement* posElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_POSITION);
 	v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
-	const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
+	const unsigned int vertexSize = static_cast<unsigned int>(vbuf->getVertexSize());
 
 	//Get read only access to the row buffer
 	unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-	float* pReal; // this pointer will be used a a buffer to write the [float, float, float] array of the vertex
+	float* rawVertex; // this pointer will be used a a buffer to write the [float, float, float] array of the vertex
 
 	//Write data to the vertex buffer
-	Vector3 * curVertices = &mVertexBuffer[prev_size];
 	const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
 	for (unsigned int j = 0; j < vertexCount; ++j)
 	{
 		//Get pointer to the start of this vertex
-		posElem->baseVertexPointerToElement(vertex, &pReal);
-		vertex += vSize;
+		posElem->baseVertexPointerToElement(vertex, &rawVertex);
+		vertex += vertexSize;
 
-		//Write data
-		curVertices->x = *pReal++;
-		curVertices->y = *pReal++;
-		curVertices->z = *pReal++;
-
-		//Apply transform
-		*curVertices = mTransform * *curVertices;
-
-		//Go to next
-		curVertices++;
+		mVertexBuffer.push_back(mTransform * Vector3{ rawVertex });
 	}
 
 	//Release vertex buffer opened in read only
@@ -93,15 +68,9 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	assert(vertex_data);
 
 	const v1::VertexData *data = blend_data;
-	const unsigned int prev_size = mVertexCount;
-	mVertexCount += static_cast<unsigned int>(data->vertexCount);
-	Vector3* tmp_vert = new Vector3[mVertexCount];
-	if (mVertexBuffer)
-	{
-		memcpy(tmp_vert, mVertexBuffer, sizeof(Vector3) * prev_size);
-		delete[] mVertexBuffer;
-	}
-	mVertexBuffer = tmp_vert;
+
+	// Get current size;
+	const auto prev_size = mVertexBuffer.size();
 
 	// Get the positional buffer element
 	{
@@ -110,22 +79,17 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 		v1::HardwareVertexBufferSharedPtr vbuf = data->vertexBufferBinding->getBuffer(posElem->getSource());
 		const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
 
+		//TODO this is duplicated code. Extract it to a method
 		unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
 		float* pReal;
-		Vector3 * curVertices = &mVertexBuffer[prev_size];
-		const unsigned int vertexCount = static_cast<unsigned int>(data->vertexCount);
+		const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
 		for (unsigned int j = 0; j < vertexCount; ++j)
 		{
+			//Get pointer to the start of this vertex
 			posElem->baseVertexPointerToElement(vertex, &pReal);
 			vertex += vSize;
 
-			curVertices->x = *pReal++;
-			curVertices->y = *pReal++;
-			curVertices->z = *pReal++;
-
-			*curVertices = mTransform * *curVertices;
-
-			curVertices++;
+			mVertexBuffer.push_back(mTransform * Vector3{ pReal });
 		}
 		vbuf->unlock();
 	}
@@ -143,7 +107,8 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 			mBoneIndex = new BoneIndex();
 		BoneIndex::iterator i;
 
-		Vector3 * curVertices = &mVertexBuffer[prev_size];
+		///Todo : get rid of that
+		Vector3 * curVertices = &mVertexBuffer.data()[prev_size];
 
 		const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
 		for (unsigned int j = 0; j < vertexCount; ++j)
@@ -174,49 +139,30 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 
 void VertexIndexToShape::addIndexData(v1::IndexData *data, const unsigned int offset)
 {
-	//Store the current index count and augment it to fit the neww data
-	const unsigned int prev_size = mIndexCount;
-	mIndexCount += static_cast<unsigned int>(data->indexCount);
+	const size_t appendedIndexes = data->indexCount;
 
-	//Allocate a new array for storing all the data, if we already had one, copy and clear it
-	unsigned int* tmp_ind = new unsigned int[mIndexCount];
-	if (mIndexBuffer)
-	{
-		memcpy(tmp_ind, mIndexBuffer, sizeof(unsigned int) * prev_size);
-		delete[] mIndexBuffer;
-	}
-
-	//Set this array to be the current index buffer
-	mIndexBuffer = tmp_ind;
-
-	//Get the number of tirangles by dividing by 3 the number of indexes
-	const unsigned int numTris = static_cast<unsigned int>(data->indexCount) / 3;
 	v1::HardwareIndexBufferSharedPtr ibuf = data->indexBuffer;
 
 	//Test if we need to read 16 or 32 bit indexes
 	const bool use32bitindexes = (ibuf->getType() == v1::HardwareIndexBuffer::IT_32BIT);
-	unsigned int index_offset = prev_size;
 
+	//todo: have just one loop here
 	if (use32bitindexes)
 	{
 		const unsigned int* pInt = static_cast<unsigned int*>(ibuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
 		//Store the indices for the 3 vertex of this triangle
-		for (unsigned int k = 0; k < numTris; ++k)
+		for (unsigned int k = 0; k < appendedIndexes; ++k)
 		{
-			mIndexBuffer[index_offset++] = offset + *pInt++;
-			mIndexBuffer[index_offset++] = offset + *pInt++;
-			mIndexBuffer[index_offset++] = offset + *pInt++;
+			mIndexBuffer.push_back(offset + *pInt++);
 		}
 		ibuf->unlock();
 	}
 	else
 	{
 		const unsigned short* pShort = static_cast<unsigned short*>(ibuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-		for (unsigned int k = 0; k < numTris; ++k)
+		for (unsigned int k = 0; k < appendedIndexes; ++k)
 		{
-			mIndexBuffer[index_offset++] = offset + static_cast<unsigned int> (*pShort++);
-			mIndexBuffer[index_offset++] = offset + static_cast<unsigned int> (*pShort++);
-			mIndexBuffer[index_offset++] = offset + static_cast<unsigned int> (*pShort++);
+			mIndexBuffer.push_back(offset + *pShort++);
 		}
 		ibuf->unlock();
 	}
@@ -261,21 +207,22 @@ Vector3 VertexIndexToShape::getSize()
 	return mBounds;
 }
 
+//These should be const
 const Vector3* VertexIndexToShape::getVertices()
 {
-	return mVertexBuffer;
+	return mVertexBuffer.data();
 }
 unsigned int VertexIndexToShape::getVertexCount()
 {
-	return mVertexCount;
+	return mVertexBuffer.size();
 }
 const unsigned int* VertexIndexToShape::getIndices()
 {
-	return mIndexBuffer;
+	return mIndexBuffer.data();
 }
 unsigned int VertexIndexToShape::getIndexCount()
 {
-	return mIndexCount;
+	return mIndexBuffer.size();
 }
 
 btSphereShape* VertexIndexToShape::createSphere()
@@ -319,10 +266,10 @@ btCylinderShape* VertexIndexToShape::createCylinder()
 }
 btConvexHullShape* VertexIndexToShape::createConvex()
 {
-	assert(mVertexCount && (mIndexCount >= 6) &&
+	assert(getVertexCount() && (getIndexCount() >= 6) &&
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-	btConvexHullShape* shape = new btConvexHullShape(static_cast<btScalar*>(&mVertexBuffer[0].x), mVertexCount, sizeof(Vector3));
+	btConvexHullShape* shape = new btConvexHullShape(static_cast<btScalar*>(&mVertexBuffer[0].x), getVertexCount(), sizeof(Vector3));
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
@@ -330,14 +277,16 @@ btConvexHullShape* VertexIndexToShape::createConvex()
 }
 btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 {
-	assert(mVertexCount && (mIndexCount >= 6) &&
+	assert(getVertexCount() && (getIndexCount() >= 6) &&
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-	unsigned int numFaces = mIndexCount / 3;
+	//Todo: create a "get triangle count" method
+	unsigned int numFaces = getIndexCount() / 3;
 
 	btTriangleMesh *trimesh = new btTriangleMesh();
-	unsigned int *indices = mIndexBuffer;
-	Vector3 *vertices = mVertexBuffer;
+
+	unsigned int *indices = const_cast<unsigned int*>(getIndices());
+	const Vector3 *vertices = getVertices();
 
 	btVector3 vertexPos[3];
 	for (unsigned int n = 0; n < numFaces; ++n)
@@ -403,9 +352,6 @@ btCapsuleShape* VertexIndexToShape::createCapsule() {
 }
 VertexIndexToShape::~VertexIndexToShape()
 {
-	delete[] mVertexBuffer;
-	delete[] mIndexBuffer;
-
 	if (mBoneIndex)
 	{
 		for (BoneIndex::iterator i = mBoneIndex->begin();
@@ -418,10 +364,6 @@ VertexIndexToShape::~VertexIndexToShape()
 	}
 }
 VertexIndexToShape::VertexIndexToShape(const Matrix4 &transform) :
-	mVertexBuffer(nullptr),
-	mIndexBuffer(nullptr),
-	mVertexCount(0),
-	mIndexCount(0),
 	mBounds(Vector3(-1, -1, -1)),
 	mBoundRadius(-1),
 	mBoneIndex(nullptr),
@@ -447,6 +389,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const
 	mEntity(nullptr),
 	mNode(nullptr)
 {
+	log("static mesh to shape converter : added entity " + entity->getName());
 	addEntity(entity, transform);
 }
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Matrix4 &transform) :
@@ -454,6 +397,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Mat
 	mEntity(nullptr),
 	mNode(nullptr)
 {
+	log("static mesh to shape converter : added mesh " + mesh->getName());
 	addMesh(mesh, transform);
 }
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const Matrix4 &transform) :
@@ -490,7 +434,7 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], mVertexCount);
+			addIndexData(sub_mesh->indexData[0], getVertexCount());
 			addStaticVertexData(sub_mesh->vertexData[0]);
 		}
 		else
@@ -524,7 +468,7 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], mVertexCount);
+			addIndexData(sub_mesh->indexData[0], getVertexCount());
 			addStaticVertexData(sub_mesh->vertexData[0]);
 		}
 		else
@@ -593,7 +537,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], mVertexCount);
+			addIndexData(sub_mesh->indexData[0], getVertexCount());
 
 			addAnimatedVertexData(sub_mesh->vertexData[0],
 				mEntity->getSubEntity(i)->_getSkelAnimVertexData(),
@@ -634,7 +578,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			addIndexData(sub_mesh->indexData[0], mVertexCount);
+			addIndexData(sub_mesh->indexData[0], getVertexCount());
 
 			addAnimatedVertexData(sub_mesh->vertexData[0],
 				nullptr,
