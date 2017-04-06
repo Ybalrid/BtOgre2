@@ -18,8 +18,18 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <Ogre.h>
+#include <OgreMesh2.h>
+#include <OgreSubMesh2.h>
+#include <OgreItem.h>
+#include <OgreBitwise.h>
+
+#include <Vao/OgreAsyncTicket.h>
+#include <vao/OgreVertexArrayObject.h>
+#include <vao/OgreVertexBufferPacked.h>
+#include <vao/OgreVertexElements.h>
 
 #include "BtOgreExtras.h"
+#include "BtOgre.hpp"
 
 namespace BtOgre
 {
@@ -76,7 +86,7 @@ namespace BtOgre
 
 	protected:
 
-		void appendVertexData(const Ogre::v1::VertexData *vertex_data);
+		void appendV1VertexData(const Ogre::v1::VertexData *vertex_data);
 
 		void addAnimatedVertexData(const Ogre::v1::VertexData *vertex_data,
 			const Ogre::v1::VertexData *blended_data,
@@ -94,7 +104,7 @@ namespace BtOgre
 			ibuf->unlock();
 		}
 
-		void appendIndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
+		void appendV1IndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
 	protected:
 		VertexBuffer	mVertexBuffer;
@@ -122,6 +132,8 @@ namespace BtOgre
 		///Create a mesh converter from a V1 mesh object
 		StaticMeshToShapeConverter(Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
+		StaticMeshToShapeConverter(Ogre::Item* item, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+
 		///Default constructor; You can add a mesh/entity later
 		StaticMeshToShapeConverter();
 
@@ -131,10 +143,15 @@ namespace BtOgre
 
 		void addMesh(const Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
+		void addItem(Ogre::Item* item, const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
+
+		void addMesh(const Ogre::Mesh* mesh, const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
+
 	protected:
 
 		Ogre::v1::Entity*		mEntity;
-		Ogre::SceneNode*	mNode;
+		Ogre::Item*				mItem;
+		Ogre::SceneNode*		mNode;
 	};
 
 	///For animated meshes.
