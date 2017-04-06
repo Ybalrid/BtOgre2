@@ -488,7 +488,7 @@ void VertexIndexToShape::RequestV2VertexBufferFromVao(VertexArrayObject* vao, Ve
 	vao->mapAsyncTickets(requests);
 }
 
-void VertexIndexToShape::loadV2MeshIndexBuffer(size_t& previousSize, size_t& offset, bool& indices32, IndexBufferPacked* indexBuffer)
+void VertexIndexToShape::loadV2MeshIndexBuffer(const size_t& previousSize, const size_t& offset, const bool& indices32, IndexBufferPacked* indexBuffer)
 {
 	if (indexBuffer)
 	{
