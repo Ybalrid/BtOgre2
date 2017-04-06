@@ -28,7 +28,7 @@ using namespace BtOgre;
 
 void log(const std::string& message)
 {
-	Ogre::LogManager::getSingleton().logMessage("BtOgreLog : " + message);
+	LogManager::getSingleton().logMessage("BtOgreLog : " + message);
 }
 
 void VertexIndexToShape::appendV1VertexData(const v1::VertexData *vertex_data)
@@ -358,9 +358,11 @@ VertexIndexToShape::VertexIndexToShape(const Matrix4 &transform) :
 StaticMeshToShapeConverter::StaticMeshToShapeConverter() :
 	VertexIndexToShape(),
 	mEntity(nullptr),
+	mItem(nullptr),
 	mNode(nullptr)
 {
 }
+
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
@@ -378,7 +380,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Mat
 	addMesh(mesh, transform);
 }
 
-StaticMeshToShapeConverter::StaticMeshToShapeConverter(Ogre::Item* item, const Ogre::Matrix4& transform)
+StaticMeshToShapeConverter::StaticMeshToShapeConverter(Item* item, const Matrix4& transform)
 {
 	addItem(item, transform);
 }
@@ -386,6 +388,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(Ogre::Item* item, const O
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
+	mItem(nullptr),
 	mNode(nullptr)
 {
 	v1::RenderOperation op;
@@ -405,12 +408,10 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius
-	// next time getRadius and getSize are asked, they're computed.
+	// next time getRadius and getSize are asked, they will be computed.
 	mBounds = Vector3(-1, -1, -1);
 	mBoundRadius = -1;
 
-	//_entity = entity;
-	//_node = (SceneNode*)(_entity->getParentNode());
 	mTransform = transform;
 
 	if (mesh->hasSkeleton())
@@ -423,7 +424,7 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 
 	for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
 	{
-		v1::SubMesh *sub_mesh = mesh->getSubMesh(i);
+		auto sub_mesh = mesh->getSubMesh(i);
 
 		if (!sub_mesh->useSharedVertices)
 		{
@@ -437,137 +438,68 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 	}
 }
 
-//Got this function on the forums here : http://www.ogre3d.org/forums/viewtopic.php?f=25&p=522494#p522494
-void getMeshData
-(
-	const Ogre::Mesh*         mesh,
-	size_t               &vertex_count,
-	Ogre::Vector3*         &vertices,
-	size_t               &index_count,
-	Ogre::uint32*         &indices,
-	const Ogre::Vector3      &position = Ogre::Vector3::ZERO,
-	const Ogre::Quaternion   &orient = Ogre::Quaternion::IDENTITY,
-	const Ogre::Vector3      &scale = Ogre::Vector3::UNIT_SCALE)
+void VertexIndexToShape::getV2MeshBufferSize(const Mesh* mesh)
 {
-	//First, we compute the total number of vertices and indices and init the buffers.
-	unsigned int numVertices = 0;
-	unsigned int numIndices = 0;
+	size_t numVertices = 0U;
+	size_t numIndices = 0U;
 
-	Ogre::Mesh::SubMeshVec::const_iterator subMeshIterator = mesh->getSubMeshes().begin();
-
-	while (subMeshIterator != mesh->getSubMeshes().end())
+	for (auto subMesh : mesh->getSubMeshes())
 	{
-		Ogre::SubMesh *subMesh = *subMeshIterator;
 		numVertices += subMesh->mVao[0][0]->getVertexBuffers()[0]->getNumElements();
 		numIndices += subMesh->mVao[0][0]->getIndexBuffer()->getNumElements();
-
-		++subMeshIterator;
 	}
 
-	vertices = new Ogre::Vector3[numVertices];
-	indices = new Ogre::uint32[numIndices];
+	mVertexBuffer.resize(numVertices);
+	mIndexBuffer.resize(numIndices);
+}
 
-	vertex_count = numVertices;
-	index_count = numIndices;
-
-	unsigned int addedVertices = 0;
-	unsigned int addedIndices = 0;
-
-	unsigned int index_offset = 0;
-	unsigned int subMeshOffset = 0;
-
-	// Read Submeshes
-	subMeshIterator = mesh->getSubMeshes().begin();
-	while (subMeshIterator != mesh->getSubMeshes().end())
+void VertexIndexToShape::loadV2SubMeshVertexBuffer(size_t& subMeshOffset, VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray requests)
+{
+	auto subMeshVerticiesNum = requests[0].vertexBuffer->getNumElements();
+	switch (requests[0].type)
 	{
-		Ogre::SubMesh *subMesh = *subMeshIterator;
-		Ogre::VertexArrayObjectArray vaos = subMesh->mVao[0];
-
-		if (!vaos.empty())
+	case VET_HALF4:
+		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
 		{
-			//Get the first LOD level
-			Ogre::VertexArrayObject *vao = vaos[0];
-			bool indices32 = (vao->getIndexBuffer()->getIndexType() == Ogre::IndexBufferPacked::IT_32BIT);
-
-			const Ogre::VertexBufferPackedVec &vertexBuffers = vao->getVertexBuffers();
-			Ogre::IndexBufferPacked *indexBuffer = vao->getIndexBuffer();
-
-			//request async read from buffer
-			Ogre::VertexArrayObject::ReadRequestsArray requests;
-			requests.push_back(Ogre::VertexArrayObject::ReadRequests(Ogre::VES_POSITION));
-
-			vao->readRequests(requests);
-			vao->mapAsyncTickets(requests);
-			unsigned int subMeshVerticiesNum = requests[0].vertexBuffer->getNumElements();
-			if (requests[0].type == Ogre::VET_HALF4)
-			{
-				for (size_t i = 0; i < subMeshVerticiesNum; ++i)
-				{
-					const Ogre::uint16* pos = reinterpret_cast<const Ogre::uint16*>(requests[0].data);
-					Ogre::Vector3 vec;
-					vec.x = Ogre::Bitwise::halfToFloat(pos[0]);
-					vec.y = Ogre::Bitwise::halfToFloat(pos[1]);
-					vec.z = Ogre::Bitwise::halfToFloat(pos[2]);
-					requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
-					vertices[i + subMeshOffset] = (orient * (vec * scale)) + position;
-				}
-			}
-			else if (requests[0].type == Ogre::VET_FLOAT3)
-			{
-				for (size_t i = 0; i < subMeshVerticiesNum; ++i)
-				{
-					const float* pos = reinterpret_cast<const float*>(requests[0].data);
-					Ogre::Vector3 vec;
-					vec.x = *pos++;
-					vec.y = *pos++;
-					vec.z = *pos++;
-					requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
-					vertices[i + subMeshOffset] = (orient * (vec * scale)) + position;
-				}
-			}
-			else
-			{
-				log("Error: Vertex Buffer type not recognised");
-			}
-			subMeshOffset += subMeshVerticiesNum;
-			vao->unmapAsyncTickets(requests);
-
-			////Read index data
-			if (indexBuffer)
-			{
-				Ogre::AsyncTicketPtr asyncTicket = indexBuffer->readRequest(0, indexBuffer->getNumElements());
-
-				unsigned int *pIndices = 0;
-				if (indices32)
-				{
-					pIndices = (unsigned*)(asyncTicket->map());
-				}
-				else
-				{
-					unsigned short *pShortIndices = (unsigned short*)(asyncTicket->map());
-					pIndices = new unsigned int[indexBuffer->getNumElements()];
-					for (size_t k = 0; k < indexBuffer->getNumElements(); k++) pIndices[k] = static_cast<unsigned int>(pShortIndices[k]);
-				}
-				unsigned int bufferIndex = 0;
-
-				for (size_t i = addedIndices; i < addedIndices + indexBuffer->getNumElements(); i++)
-				{
-					indices[i] = pIndices[bufferIndex] + index_offset;
-					bufferIndex++;
-				}
-				addedIndices += indexBuffer->getNumElements();
-
-				if (!indices32) delete[] pIndices;
-
-				asyncTicket->unmap();
-			}
-			index_offset += vertexBuffers[0]->getNumElements();
+			const uint16* pos = reinterpret_cast<const uint16*>(requests[0].data);
+			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
+			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3{ Bitwise::halfToFloat(pos[0]), Bitwise::halfToFloat(pos[1]), Bitwise::halfToFloat(pos[2]) };
 		}
-		subMeshIterator++;
+		break;
+	case VET_FLOAT3:
+		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
+		{
+			const Real* pos = reinterpret_cast<const Real*>(requests[0].data);
+			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
+			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3(pos);
+		}
+		break;
+	default:
+		log("Error: Vertex Buffer type not recognised");
+	}
+	subMeshOffset += subMeshVerticiesNum;
+}
+
+void VertexIndexToShape::RequestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests) const
+{
+	requests.push_back(VertexArrayObject::ReadRequests(VES_POSITION));
+
+	vao->readRequests(requests);
+	vao->mapAsyncTickets(requests);
+}
+
+void VertexIndexToShape::loadV2MeshIndexBuffer(size_t& previousSize, size_t& offset, bool& indices32, IndexBufferPacked* indexBuffer)
+{
+	if (indexBuffer)
+	{
+		AsyncTicketPtr asyncTicket = indexBuffer->readRequest(0, indexBuffer->getNumElements());
+
+		if (indices32) loadV2MeshIndexBufferTyped<uint32>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
+		else loadV2MeshIndexBufferTyped<uint16>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
 	}
 }
 
-void StaticMeshToShapeConverter::addItem(Ogre::Item* item, const Ogre::Matrix4& transform)
+void StaticMeshToShapeConverter::addItem(Item* item, const Matrix4& transform)
 {
 	mItem = item;
 	mNode = static_cast<SceneNode*>(mItem->getParentNode());
@@ -576,7 +508,7 @@ void StaticMeshToShapeConverter::addItem(Ogre::Item* item, const Ogre::Matrix4& 
 	addMesh(item->getMesh().get(), transform);
 }
 
-void StaticMeshToShapeConverter::addMesh(const Ogre::Mesh* mesh, const Ogre::Matrix4& transform)
+void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transform)
 {
 	mBounds = Vector3(-1, -1, -1);
 	mBoundRadius = -1;
@@ -585,27 +517,44 @@ void StaticMeshToShapeConverter::addMesh(const Ogre::Mesh* mesh, const Ogre::Mat
 	if (mesh->hasSkeleton())
 		log("MeshToShapeConverter::addMesh : Mesh " + mesh->getName() + " as skeleton but added to trimesh non animated");
 
-	size_t vertexCount, indexCount;
-	Vector3* vertexPositions;
-	uint32* indices;
+	//First, we compute the total number of vertices and indices and init the buffers.
+	getV2MeshBufferSize(mesh);
 
-	getMeshData(mesh, vertexCount, vertexPositions, indexCount, indices);
+	size_t addedIndices = 0U;
+	size_t indexOffset = 0U;
+	size_t subMeshOffset = 0U;
 
-	mVertexBuffer.resize(vertexCount);
-	mIndexBuffer.resize(indexCount);
-
-	for (auto i = 0u; i < vertexCount; i++)
+	//For each submeshes
+	for (const auto& subMesh : mesh->getSubMeshes())
 	{
-		mVertexBuffer[i] = vertexPositions[i];
-	}
+		//Get VAOs
+		auto vaos = subMesh->mVao[0];
 
-	for (auto i = 0u; i < indexCount; i++)
-	{
-		mIndexBuffer[i] = indices[i];
-	}
+		//go to next submesh if no data
+		if (vaos.empty()) continue;
 
-	delete[] vertexPositions;
-	delete[] indices;
+		//Get the first LOD level
+		auto vao = vaos[0];
+
+		//Get the packed buffer information
+		const auto& vertexBuffers = vao->getVertexBuffers();
+		auto indexBuffer = vao->getIndexBuffer();
+
+		//request async read from buffer
+		VertexArrayObject::ReadRequestsArray requests;
+		RequestV2VertexBufferFromVao(vao, requests);	//Don't forget that this call will map all async tickets in the request for the Vao
+
+		//Load the requested data into vertex buffer, this will map the tickets.
+		loadV2SubMeshVertexBuffer(subMeshOffset, vao, requests);
+
+		//Don't need that request anymore, unmap all tickets
+		vao->unmapAsyncTickets(requests);
+
+		//Read index data
+		auto indices32 = vao->getIndexBuffer()->getIndexType() == IndexBufferPacked::IT_32BIT;
+		loadV2MeshIndexBuffer(addedIndices, indexOffset, indices32, indexBuffer);
+		indexOffset += vertexBuffers[0]->getNumElements();
+	}
 }
 
 /*

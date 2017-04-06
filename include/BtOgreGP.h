@@ -106,6 +106,34 @@ namespace BtOgre
 
 		void appendV1IndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
+		//V2 Mesh buffer loading inspired by the solution here: http://www.ogre3d.org/forums/viewtopic.php?f=25&p=522494#p522494
+
+		///Go through the submeshes and set the size of the {vertex;index} buffers
+		void getV2MeshBufferSize(const Ogre::Mesh* mesh);
+
+		///load the request and sends it to the VAO manager, this will map all tickets regarding that request, you will need to unmap them when you have finished
+		void RequestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests) const;
+
+		///Load the vertex buffer data
+		void loadV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray requests);
+
+		///Load the index buffer data using the given type (16 or 32bit)
+		template<typename T> void loadV2MeshIndexBufferTyped(Ogre::AsyncTicketPtr asyncTicket, const unsigned& offset,
+			const size_t& perviousSize, const size_t& appendedIndices)
+		{
+			auto pData = static_cast<const T*>(asyncTicket->map());
+
+			for (auto i = 0; i < appendedIndices; ++i)
+			{
+				mIndexBuffer[perviousSize + i] = offset + pData[i];
+			}
+
+			asyncTicket->unmap();
+		}
+
+		///Load the index buffer data
+		void loadV2MeshIndexBuffer(size_t& previousSize, size_t& offset, bool& indices32, Ogre::IndexBufferPacked* indexBuffer);
+
 	protected:
 		VertexBuffer	mVertexBuffer;
 		IndexBuffer		mIndexBuffer;
