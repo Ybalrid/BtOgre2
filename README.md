@@ -29,6 +29,8 @@ The goal is to reorganise the source code of this project, and also do some clea
  - Modified to compile against Ogre 2.1
  - Added an overload to construct a static shape converter from an Ogre::v1::MeshPtr
  - Motion states moves "derivated coordinates" instead of the "regular" ones. This prevent unsynchronising graphics and physics if you are doing weird object parenting stuff (in case of physics objects, You probably shouldn't)
+ - The static *mesh to shape converter* has overload to use v2 meshes and Items, instead of just v1 meshes or Entity object
+
  - Class implementation are not in headers
  - Debug drawer re-implemented for Ogre V2 by using a manual object instead of an array of dynamic renderables
    - The debug drawer also supports every mode of debug drawing Bullet can offer, and does it with the proper colors
@@ -37,7 +39,6 @@ The goal is to reorganise the source code of this project, and also do some clea
 
 ## Changes planned
 
-  - Rewrite the static *mesh to shape converter* to use v2 meshes, or even Item, instead of v1 meshes or Entity object
   - Revisit the animated *mesh to shape converter* but right now Ogre V2 animations and v1 animations co-exist in a weird state
   - Try to implement something for soft body physics.
   - Try to make sure nothing's break if you change the origin of the scene. Ogre support that now by moving the root node. This could cause thing to go quite wrong in the Physics <-> Graphics communication
