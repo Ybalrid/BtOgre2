@@ -28,10 +28,10 @@ using namespace BtOgre;
 
 void log(const std::string& message)
 {
-	Ogre::LogManager::getSingleton().logMessage("BtOgreLog : " + message);
+	LogManager::getSingleton().logMessage("BtOgreLog : " + message);
 }
 
-void VertexIndexToShape::appendVertexData(const v1::VertexData *vertex_data)
+void VertexIndexToShape::appendV1VertexData(const v1::VertexData *vertex_data)
 {
 	if (!vertex_data)
 		return;
@@ -79,7 +79,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	const auto prev_size = mVertexBuffer.size();
 
 	// Get the positional buffer element
-	appendVertexData(data);
+	appendV1VertexData(data);
 
 	const v1::VertexElement* bneElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_BLEND_INDICES);
 	assert(bneElem);
@@ -123,7 +123,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	vbuf->unlock();
 }
 
-void VertexIndexToShape::appendIndexData(v1::IndexData *data, const unsigned int offset)
+void VertexIndexToShape::appendV1IndexData(v1::IndexData *data, const unsigned int offset)
 {
 	const auto appendedIndexes = data->indexCount;
 	const auto previousSize = mIndexBuffer.size();
@@ -326,6 +326,7 @@ btCapsuleShape* VertexIndexToShape::createCapsule() {
 
 	return shape;
 }
+
 VertexIndexToShape::~VertexIndexToShape()
 {
 	if (mBoneIndex)
@@ -357,100 +358,202 @@ VertexIndexToShape::VertexIndexToShape(const Matrix4 &transform) :
 StaticMeshToShapeConverter::StaticMeshToShapeConverter() :
 	VertexIndexToShape(),
 	mEntity(nullptr),
+	mItem(nullptr),
 	mNode(nullptr)
 {
 }
+
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
+	mItem(nullptr),
 	mNode(nullptr)
 {
-	log("static mesh to shape converter : added entity " + entity->getName());
 	addEntity(entity, transform);
 }
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
+	mItem(nullptr),
 	mNode(nullptr)
 {
-	log("static mesh to shape converter : added mesh " + mesh->getName());
 	addMesh(mesh, transform);
 }
+
+StaticMeshToShapeConverter::StaticMeshToShapeConverter(Item* item, const Matrix4& transform)
+{
+	addItem(item, transform);
+}
+
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
+	mItem(nullptr),
 	mNode(nullptr)
 {
 	v1::RenderOperation op;
 	rend->getRenderOperation(op, false);
-	appendVertexData(op.vertexData);
+	appendV1VertexData(op.vertexData);
 	if (op.useIndexes)
-		appendIndexData(op.indexData);
+		appendV1IndexData(op.indexData);
 }
 void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &transform)
 {
-	// Each entity added need to reset size and radius
-	// next time getRadius and getSize are asked, they're computed.
-	mBounds = Vector3(-1, -1, -1);
-	mBoundRadius = -1;
-
 	mEntity = entity;
 	mNode = static_cast<SceneNode*>(mEntity->getParentNode());
-	mTransform = transform;
-	mScale = mNode ? mNode->getScale() : Vector3(1, 1, 1);
+	mScale = mNode ? mNode->getScale() : Vector3::UNIT_SCALE;
 
-	if (mEntity->getMesh()->sharedVertexData[0])
-	{
-		appendVertexData(mEntity->getMesh()->sharedVertexData[0]);
-	}
-
-	for (unsigned int i = 0; i < mEntity->getNumSubEntities(); ++i)
-	{
-		v1::SubMesh *sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
-
-		if (!sub_mesh->useSharedVertices)
-		{
-			appendIndexData(sub_mesh->indexData[0], getVertexCount());
-			appendVertexData(sub_mesh->vertexData[0]);
-		}
-		else
-		{
-			appendIndexData(sub_mesh->indexData[0]);
-		}
-	}
+	addMesh(mEntity->getMesh().get(), transform);
 }
 void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius
-	// next time getRadius and getSize are asked, they're computed.
+	// next time getRadius and getSize are asked, they will be computed.
 	mBounds = Vector3(-1, -1, -1);
 	mBoundRadius = -1;
 
-	//_entity = entity;
-	//_node = (SceneNode*)(_entity->getParentNode());
 	mTransform = transform;
 
 	if (mesh->hasSkeleton())
-		LogManager::getSingleton().logMessage("MeshToShapeConverter::addMesh : Mesh " + mesh->getName() + " as skeleton but added to trimesh non animated");
+		log("MeshToShapeConverter::addMesh : Mesh " + mesh->getName() + " as skeleton but added to trimesh non animated");
 
 	if (mesh->sharedVertexData[0])
 	{
-		appendVertexData(mesh->sharedVertexData[0]);
+		appendV1VertexData(mesh->sharedVertexData[0]);
 	}
 
 	for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
 	{
-		v1::SubMesh *sub_mesh = mesh->getSubMesh(i);
+		auto sub_mesh = mesh->getSubMesh(i);
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			appendIndexData(sub_mesh->indexData[0], getVertexCount());
-			appendVertexData(sub_mesh->vertexData[0]);
+			appendV1IndexData(sub_mesh->indexData[0], getVertexCount());
+			appendV1VertexData(sub_mesh->vertexData[0]);
 		}
 		else
 		{
-			appendIndexData(sub_mesh->indexData[0]);
+			appendV1IndexData(sub_mesh->indexData[0]);
 		}
+	}
+}
+
+void VertexIndexToShape::getV2MeshBufferSize(const Mesh* mesh)
+{
+	size_t numVertices = 0U;
+	size_t numIndices = 0U;
+
+	for (auto subMesh : mesh->getSubMeshes())
+	{
+		numVertices += subMesh->mVao[0][0]->getVertexBuffers()[0]->getNumElements();
+		numIndices += subMesh->mVao[0][0]->getIndexBuffer()->getNumElements();
+	}
+
+	mVertexBuffer.resize(numVertices);
+	mIndexBuffer.resize(numIndices);
+}
+
+void VertexIndexToShape::loadV2SubMeshVertexBuffer(size_t& subMeshOffset, VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray requests)
+{
+	auto subMeshVerticiesNum = requests[0].vertexBuffer->getNumElements();
+	switch (requests[0].type)
+	{
+	case VET_HALF4:
+		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
+		{
+			const uint16* pos = reinterpret_cast<const uint16*>(requests[0].data);
+			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
+			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3{ Bitwise::halfToFloat(pos[0]), Bitwise::halfToFloat(pos[1]), Bitwise::halfToFloat(pos[2]) };
+		}
+		break;
+	case VET_FLOAT3:
+		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
+		{
+			const Real* pos = reinterpret_cast<const Real*>(requests[0].data);
+			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
+			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3(pos);
+		}
+		break;
+	default:
+		log("Error: Vertex Buffer type not recognised");
+	}
+	subMeshOffset += subMeshVerticiesNum;
+}
+
+void VertexIndexToShape::RequestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests) const
+{
+	requests.push_back(VertexArrayObject::ReadRequests(VES_POSITION));
+
+	vao->readRequests(requests);
+	vao->mapAsyncTickets(requests);
+}
+
+void VertexIndexToShape::loadV2MeshIndexBuffer(size_t& previousSize, size_t& offset, bool& indices32, IndexBufferPacked* indexBuffer)
+{
+	if (indexBuffer)
+	{
+		AsyncTicketPtr asyncTicket = indexBuffer->readRequest(0, indexBuffer->getNumElements());
+
+		if (indices32) loadV2MeshIndexBufferTyped<uint32>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
+		else loadV2MeshIndexBufferTyped<uint16>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
+	}
+}
+
+void StaticMeshToShapeConverter::addItem(Item* item, const Matrix4& transform)
+{
+	mItem = item;
+	mNode = static_cast<SceneNode*>(mItem->getParentNode());
+	mScale = mNode ? mNode->getScale() : Vector3::UNIT_SCALE;
+
+	addMesh(item->getMesh().get(), transform);
+}
+
+void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transform)
+{
+	mBounds = Vector3(-1, -1, -1);
+	mBoundRadius = -1;
+	mTransform = transform;
+
+	if (mesh->hasSkeleton())
+		log("MeshToShapeConverter::addMesh : Mesh " + mesh->getName() + " as skeleton but added to trimesh non animated");
+
+	//First, we compute the total number of vertices and indices and init the buffers.
+	getV2MeshBufferSize(mesh);
+
+	size_t addedIndices = 0U;
+	size_t indexOffset = 0U;
+	size_t subMeshOffset = 0U;
+
+	//For each submeshes
+	for (const auto& subMesh : mesh->getSubMeshes())
+	{
+		//Get VAOs
+		auto vaos = subMesh->mVao[0];
+
+		//go to next submesh if no data
+		if (vaos.empty()) continue;
+
+		//Get the first LOD level
+		auto vao = vaos[0];
+
+		//Get the packed buffer information
+		const auto& vertexBuffers = vao->getVertexBuffers();
+		auto indexBuffer = vao->getIndexBuffer();
+
+		//request async read from buffer
+		VertexArrayObject::ReadRequestsArray requests;
+		RequestV2VertexBufferFromVao(vao, requests);	//Don't forget that this call will map all async tickets in the request for the Vao
+
+		//Load the requested data into vertex buffer, this will map the tickets.
+		loadV2SubMeshVertexBuffer(subMeshOffset, vao, requests);
+
+		//Don't need that request anymore, unmap all tickets
+		vao->unmapAsyncTickets(requests);
+
+		//Read index data
+		auto indices32 = vao->getIndexBuffer()->getIndexType() == IndexBufferPacked::IT_32BIT;
+		loadV2MeshIndexBuffer(addedIndices, indexOffset, indices32, indexBuffer);
+		indexOffset += vertexBuffers[0]->getNumElements();
 	}
 }
 
@@ -513,7 +616,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			appendIndexData(sub_mesh->indexData[0], getVertexCount());
+			appendV1IndexData(sub_mesh->indexData[0], getVertexCount());
 
 			addAnimatedVertexData(sub_mesh->vertexData[0],
 				mEntity->getSubEntity(i)->_getSkelAnimVertexData(),
@@ -521,7 +624,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 		}
 		else
 		{
-			appendIndexData(sub_mesh->indexData[0]);
+			appendV1IndexData(sub_mesh->indexData[0]);
 		}
 	}
 
@@ -554,7 +657,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			appendIndexData(sub_mesh->indexData[0], getVertexCount());
+			appendV1IndexData(sub_mesh->indexData[0], getVertexCount());
 
 			addAnimatedVertexData(sub_mesh->vertexData[0],
 				nullptr,
@@ -562,7 +665,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 		}
 		else
 		{
-			appendIndexData(sub_mesh->indexData[0]);
+			appendV1IndexData(sub_mesh->indexData[0]);
 		}
 	}
 }
