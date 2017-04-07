@@ -112,7 +112,7 @@ namespace BtOgre
 		void getV2MeshBufferSize(const Ogre::Mesh* mesh);
 
 		///load the request and sends it to the VAO manager, this will map all tickets regarding that request, you will need to unmap them when you have finished
-		void requestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests) const;
+		static void requestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests);
 
 		///Load the vertex buffer data
 		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray requests);

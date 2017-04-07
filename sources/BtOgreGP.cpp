@@ -42,18 +42,18 @@ void VertexIndexToShape::appendV1VertexData(const v1::VertexData *vertex_data)
 	mVertexBuffer.resize(previousSize + vertex_data->vertexCount);
 
 	// Get the positional buffer element
-	const v1::VertexElement* posElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_POSITION);
-	v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
+	auto posElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_POSITION);
+	auto vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
 
-	const unsigned int vertexSize = static_cast<unsigned int>(vbuf->getVertexSize());
+	const auto vertexSize = static_cast<unsigned int>(vbuf->getVertexSize());
 
 	//Get read only access to the row buffer
-	unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
+	auto vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
 	float* rawVertex; // this pointer will be used a a buffer to write the [float, float, float] array of the vertex
 
 	//Write data to the vertex buffer
-	const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
-	for (unsigned int j = 0; j < vertexCount; ++j)
+	const auto vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
+	for (auto j = 0U; j < vertexCount; ++j)
 	{
 		//Get pointer to the start of this vertex
 		posElem->baseVertexPointerToElement(vertex, &rawVertex);
@@ -73,7 +73,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	// Get the bone index element
 	assert(vertex_data);
 
-	const v1::VertexData *data = blend_data;
+	auto data = blend_data;
 
 	// Get current size;
 	const auto prev_size = mVertexBuffer.size();
@@ -81,12 +81,12 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	// Get the positional buffer element
 	appendV1VertexData(data);
 
-	const v1::VertexElement* bneElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_BLEND_INDICES);
+	auto bneElem = vertex_data->vertexDeclaration->findElementBySemantic(VES_BLEND_INDICES);
 	assert(bneElem);
 
-	v1::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(bneElem->getSource());
-	const unsigned int vSize = static_cast<unsigned int>(vbuf->getVertexSize());
-	unsigned char* vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
+	auto vbuf = vertex_data->vertexBufferBinding->getBuffer(bneElem->getSource());
+	const auto vSize = static_cast<unsigned int>(vbuf->getVertexSize());
+	auto vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
 
 	unsigned char* pBone;
 
@@ -95,10 +95,10 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	BoneIndex::iterator i;
 
 	///Todo : get rid of that
-	Vector3 * curVertices = &mVertexBuffer.data()[prev_size];
+	auto curVertices = &mVertexBuffer.data()[prev_size];
 
-	const unsigned int vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
-	for (unsigned int j = 0; j < vertexCount; ++j)
+	const auto vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
+	for (auto j = 0U; j < vertexCount; ++j)
 	{
 		bneElem->baseVertexPointerToElement(vertex, &pBone);
 		vertex += vSize;
@@ -130,7 +130,7 @@ void VertexIndexToShape::appendV1IndexData(v1::IndexData *data, const unsigned i
 
 	mIndexBuffer.resize(previousSize + appendedIndexes);
 
-	v1::HardwareIndexBufferSharedPtr ibuf = data->indexBuffer;
+	auto ibuf = data->indexBuffer;
 
 	//Test if we need to read 16 or 32 bit indexes
 	if (ibuf->getType() == v1::HardwareIndexBuffer::IT_32BIT)
@@ -151,13 +151,13 @@ Real VertexIndexToShape::getRadius()
 
 Vector3 VertexIndexToShape::getSize()
 {
-	const unsigned int vCount = getVertexCount();
+	const auto vCount = getVertexCount();
 	if (mBounds == Vector3(-1, -1, -1) && vCount > 0)
 	{
-		const Vector3 * const v = getVertices();
+		const auto v = getVertices();
 
-		Vector3 vmin(v[0]);
-		Vector3 vmax(v[0]);
+		auto vmin(v[0]);
+		auto vmax(v[0]);
 
 		for (unsigned int j = 1; j < vCount; j++)
 		{
@@ -203,10 +203,10 @@ inline unsigned VertexIndexToShape::getTriangleCount()
 
 btSphereShape* VertexIndexToShape::createSphere()
 {
-	const Real rad = getRadius();
+	const auto rad = getRadius();
 	assert((rad > 0.0) &&
 		("Sphere radius must be greater than zero"));
-	btSphereShape* shape = new btSphereShape(rad);
+	auto shape = new btSphereShape(rad);
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
@@ -215,12 +215,12 @@ btSphereShape* VertexIndexToShape::createSphere()
 
 btBoxShape* VertexIndexToShape::createBox()
 {
-	const Vector3 sz = getSize();
+	const auto sz = getSize();
 
 	assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
 		("Size of box must be greater than zero on all axes"));
 
-	btBoxShape* shape = new btBoxShape(Convert::toBullet(sz * 0.5));
+	auto shape = new btBoxShape(Convert::toBullet(sz * 0.5));
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
@@ -229,7 +229,7 @@ btBoxShape* VertexIndexToShape::createBox()
 
 btCylinderShape* VertexIndexToShape::createCylinder()
 {
-	const Vector3 sz = getSize();
+	const auto sz = getSize();
 
 	assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
 		("Size of Cylinder must be greater than zero on all axes"));
@@ -245,7 +245,7 @@ btConvexHullShape* VertexIndexToShape::createConvex()
 	assert(getVertexCount() && (getIndexCount() >= 6) &&
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-	btConvexHullShape* shape = new btConvexHullShape(static_cast<btScalar*>(&mVertexBuffer[0].x), getVertexCount(), sizeof(Vector3));
+	auto shape = new btConvexHullShape(static_cast<btScalar*>(&mVertexBuffer[0].x), getVertexCount(), sizeof(Vector3));
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
@@ -257,30 +257,30 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
 	//Todo: create a "get triangle count" method
-	unsigned int numFaces = getTriangleCount();
+	auto numFaces = getTriangleCount();
 
-	btTriangleMesh *trimesh = new btTriangleMesh();
+	auto trimesh = new btTriangleMesh();
 
-	unsigned int *indices = const_cast<unsigned int*>(getIndices());
-	const Vector3 *vertices = getVertices();
+	auto indices = const_cast<unsigned int*>(getIndices());
+	auto vertices = getVertices();
 
 	btVector3 vertexPos[3];
 	for (unsigned int n = 0; n < numFaces; ++n)
 	{
 		{
-			const Vector3 &vec = vertices[*indices];
+			const auto& vec = vertices[*indices];
 			vertexPos[0][0] = vec.x;
 			vertexPos[0][1] = vec.y;
 			vertexPos[0][2] = vec.z;
 		}
 		{
-			const Vector3 &vec = vertices[*(indices + 1)];
+			const auto& vec = vertices[*(indices + 1)];
 			vertexPos[1][0] = vec.x;
 			vertexPos[1][1] = vec.y;
 			vertexPos[1][2] = vec.z;
 		}
 		{
-			const Vector3 &vec = vertices[*(indices + 2)];
+			const auto& vec = vertices[*(indices + 2)];
 			vertexPos[2][0] = vec.x;
 			vertexPos[2][1] = vec.y;
 			vertexPos[2][2] = vec.z;
@@ -291,20 +291,20 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 		trimesh->addTriangle(vertexPos[0], vertexPos[1], vertexPos[2]);
 	}
 
-	const bool useQuantizedAABB = true;
-	btBvhTriangleMeshShape *shape = new btBvhTriangleMeshShape(trimesh, useQuantizedAABB);
+	const auto useQuantizedAABB = true;
+	auto shape = new btBvhTriangleMeshShape(trimesh, useQuantizedAABB);
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
 	return shape;
 }
 btCapsuleShape* VertexIndexToShape::createCapsule() {
-	const Vector3 sz = getSize();
+	const auto sz = getSize();
 
 	assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
 		("Size of the capsule must be greater than zero on all axes"));
 
-	btScalar height = std::max(sz.x, std::max(sz.y, sz.z));
+	auto height = std::max(sz.x, std::max(sz.y, sz.z));
 	btScalar radius;
 	btCapsuleShape* shape;
 	// Orient the capsule such that its axiz is aligned with the largest dimension.
@@ -331,7 +331,7 @@ VertexIndexToShape::~VertexIndexToShape()
 {
 	if (mBoneIndex)
 	{
-		for (BoneIndex::iterator i = mBoneIndex->begin();
+		for (auto i = mBoneIndex->begin();
 			i != mBoneIndex->end();
 			++i)
 		{
@@ -461,7 +461,7 @@ void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ver
 	case VET_HALF4:
 		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
 		{
-			const uint16* pos = reinterpret_cast<const uint16*>(requests[0].data);
+			auto pos = reinterpret_cast<const uint16*>(requests[0].data);
 			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
 			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3{ Bitwise::halfToFloat(pos[0]), Bitwise::halfToFloat(pos[1]), Bitwise::halfToFloat(pos[2]) };
 		}
@@ -469,7 +469,7 @@ void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ver
 	case VET_FLOAT3:
 		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
 		{
-			const Real* pos = reinterpret_cast<const Real*>(requests[0].data);
+			auto pos = reinterpret_cast<const Real*>(requests[0].data);
 			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
 			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3(pos);
 		}
@@ -480,7 +480,7 @@ void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ver
 	subMeshOffset += subMeshVerticiesNum;
 }
 
-void VertexIndexToShape::requestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests) const
+void VertexIndexToShape::requestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests)
 {
 	requests.push_back(VertexArrayObject::ReadRequests(VES_POSITION));
 
@@ -492,7 +492,7 @@ void VertexIndexToShape::extractV2SubMeshIndexBuffer(const size_t& previousSize,
 {
 	if (indexBuffer)
 	{
-		AsyncTicketPtr asyncTicket = indexBuffer->readRequest(0, indexBuffer->getNumElements());
+		auto asyncTicket = indexBuffer->readRequest(0, indexBuffer->getNumElements());
 
 		if (indices32) loadV2IndexBuffer<uint32>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
 		else loadV2IndexBuffer<uint16>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
@@ -612,7 +612,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 
 	for (unsigned int i = 0; i < mEntity->getNumSubEntities(); ++i)
 	{
-		v1::SubMesh *sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
+		auto sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
 
 		if (!sub_mesh->useSharedVertices)
 		{
@@ -653,7 +653,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 
 	for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
 	{
-		v1::SubMesh *sub_mesh = mesh->getSubMesh(i);
+		auto sub_mesh = mesh->getSubMesh(i);
 
 		if (!sub_mesh->useSharedVertices)
 		{
@@ -675,7 +675,7 @@ bool AnimatedMeshToShapeConverter::getBoneVertices(unsigned char bone,
 	Vector3* &vertices,
 	const Vector3 &bonePosition)
 {
-	BoneIndex::iterator i = mBoneIndex->find(bone);
+	auto i = mBoneIndex->find(bone);
 
 	if (i == mBoneIndex->end())
 		return false;
@@ -699,7 +699,7 @@ bool AnimatedMeshToShapeConverter::getBoneVertices(unsigned char bone,
 
 	//mEntity->getSkeleton()->getBone(bone)->_getDerivedOrientation()
 	unsigned int currBoneVertex = 1;
-	Vector3Array::iterator j = i->second->begin();
+	auto j = i->second->begin();
 	while (j != i->second->end())
 	{
 		vertices[currBoneVertex] = (*j);
@@ -719,8 +719,8 @@ btBoxShape* AnimatedMeshToShapeConverter::createAlignedBox(unsigned char bone,
 	if (!getBoneVertices(bone, vertex_count, vertices, bonePosition))
 		return nullptr;
 
-	Vector3 min_vec(vertices[0]);
-	Vector3 max_vec(vertices[0]);
+	auto min_vec(vertices[0]);
+	auto max_vec(vertices[0]);
 
 	for (unsigned int j = 1; j < vertex_count; j++)
 	{
@@ -732,8 +732,8 @@ btBoxShape* AnimatedMeshToShapeConverter::createAlignedBox(unsigned char bone,
 		max_vec.y = std::max(max_vec.y, vertices[j].y);
 		max_vec.z = std::max(max_vec.z, vertices[j].z);
 	}
-	const Vector3 maxMinusMin(max_vec - min_vec);
-	btBoxShape* box = new btBoxShape(Convert::toBullet(maxMinusMin));
+	const auto maxMinusMin(max_vec - min_vec);
+	auto box = new btBoxShape(Convert::toBullet(maxMinusMin));
 
 	/*const Ogre::Vector3 pos
 		(min_vec.x + (maxMinusMin.x * 0.5),
@@ -768,7 +768,7 @@ bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
 		const Real invVertexCount = 1.0 / vertex_count;
 		box_kCenter *= invVertexCount;
 	}
-	Quaternion orient = boneOrientation;
+	auto orient = boneOrientation;
 	orient.ToAxes(box_akAxis);
 
 	// Let C be the box center and let U0, U1, and U2 be the box axes. Each
@@ -778,28 +778,28 @@ bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
 	// C' = C + 0.5*(min(y0)+max(y0))*U0 + 0.5*(min(y1)+max(y1))*U1 +
 	//      0.5*(min(y2)+max(y2))*U2
 
-	Vector3 kDiff(vertices[1] - box_kCenter);
-	Real fY0Min = kDiff.dotProduct(box_akAxis[0]), fY0Max = fY0Min;
-	Real fY1Min = kDiff.dotProduct(box_akAxis[1]), fY1Max = fY1Min;
-	Real fY2Min = kDiff.dotProduct(box_akAxis[2]), fY2Max = fY2Min;
+	auto kDiff(vertices[1] - box_kCenter);
+	auto fY0Min = kDiff.dotProduct(box_akAxis[0]), fY0Max = fY0Min;
+	auto fY1Min = kDiff.dotProduct(box_akAxis[1]), fY1Max = fY1Min;
+	auto fY2Min = kDiff.dotProduct(box_akAxis[2]), fY2Max = fY2Min;
 
 	for (unsigned int i = 2; i < vertex_count; i++)
 	{
 		kDiff = vertices[i] - box_kCenter;
 
-		const Real fY0 = kDiff.dotProduct(box_akAxis[0]);
+		const auto fY0 = kDiff.dotProduct(box_akAxis[0]);
 		if (fY0 < fY0Min)
 			fY0Min = fY0;
 		else if (fY0 > fY0Max)
 			fY0Max = fY0;
 
-		const Real fY1 = kDiff.dotProduct(box_akAxis[1]);
+		const auto fY1 = kDiff.dotProduct(box_akAxis[1]);
 		if (fY1 < fY1Min)
 			fY1Min = fY1;
 		else if (fY1 > fY1Max)
 			fY1Max = fY1;
 
-		const Real fY2 = kDiff.dotProduct(box_akAxis[2]);
+		const auto fY2 = kDiff.dotProduct(box_akAxis[2]);
 		if (fY2 < fY2Min)
 			fY2Min = fY2;
 		else if (fY2 > fY2Max)
@@ -833,7 +833,7 @@ btBoxShape *AnimatedMeshToShapeConverter::createOrientedBox(unsigned char bone,
 		box_afCenter))
 		return nullptr;
 
-	btBoxShape *geom = new btBoxShape(Convert::toBullet(box_afExtent));
+	auto geom = new btBoxShape(Convert::toBullet(box_afExtent));
 	//geom->setOrientation(Quaternion(box_akAxis[0],box_akAxis[1],box_akAxis[2]));
 	//geom->setPosition(box_afCenter);
 	return geom;
