@@ -453,7 +453,7 @@ void VertexIndexToShape::getV2MeshBufferSize(const Mesh* mesh)
 	mIndexBuffer.resize(numIndices);
 }
 
-void VertexIndexToShape::loadV2SubMeshVertexBuffer(size_t& subMeshOffset, VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray requests)
+void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset, VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray requests)
 {
 	auto subMeshVerticiesNum = requests[0].vertexBuffer->getNumElements();
 	switch (requests[0].type)
@@ -480,7 +480,7 @@ void VertexIndexToShape::loadV2SubMeshVertexBuffer(size_t& subMeshOffset, Vertex
 	subMeshOffset += subMeshVerticiesNum;
 }
 
-void VertexIndexToShape::RequestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests) const
+void VertexIndexToShape::requestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests) const
 {
 	requests.push_back(VertexArrayObject::ReadRequests(VES_POSITION));
 
@@ -488,14 +488,14 @@ void VertexIndexToShape::RequestV2VertexBufferFromVao(VertexArrayObject* vao, Ve
 	vao->mapAsyncTickets(requests);
 }
 
-void VertexIndexToShape::loadV2MeshIndexBuffer(const size_t& previousSize, const size_t& offset, const bool& indices32, IndexBufferPacked* indexBuffer)
+void VertexIndexToShape::extractV2SubMeshIndexBuffer(const size_t& previousSize, const size_t& offset, const bool& indices32, IndexBufferPacked* indexBuffer)
 {
 	if (indexBuffer)
 	{
 		AsyncTicketPtr asyncTicket = indexBuffer->readRequest(0, indexBuffer->getNumElements());
 
-		if (indices32) loadV2MeshIndexBufferTyped<uint32>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
-		else loadV2MeshIndexBufferTyped<uint16>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
+		if (indices32) loadV2IndexBuffer<uint32>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
+		else loadV2IndexBuffer<uint16>(asyncTicket, offset, previousSize, indexBuffer->getNumElements());
 	}
 }
 
@@ -542,17 +542,17 @@ void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transf
 
 		//request async read from buffer
 		VertexArrayObject::ReadRequestsArray requests;
-		RequestV2VertexBufferFromVao(vao, requests);	//Don't forget that this call will map all async tickets in the request for the Vao
+		requestV2VertexBufferFromVao(vao, requests);	//Don't forget that this call will map all async tickets in the request for the Vao
 
 		//Load the requested data into vertex buffer, this will map the tickets.
-		loadV2SubMeshVertexBuffer(subMeshOffset, vao, requests);
+		extractV2SubMeshVertexBuffer(subMeshOffset, vao, requests);
 
 		//Don't need that request anymore, unmap all tickets
 		vao->unmapAsyncTickets(requests);
 
 		//Read index data
 		auto indices32 = vao->getIndexBuffer()->getIndexType() == IndexBufferPacked::IT_32BIT;
-		loadV2MeshIndexBuffer(addedIndices, indexOffset, indices32, indexBuffer);
+		extractV2SubMeshIndexBuffer(addedIndices, indexOffset, indices32, indexBuffer);
 		indexOffset += vertexBuffers[0]->getNumElements();
 	}
 }

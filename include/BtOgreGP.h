@@ -96,14 +96,14 @@ namespace BtOgre
 			const size_t& previousSize, const size_t& appendedIndexes)
 		{
 			auto pointerData = static_cast<T*>(ibuf->lock(Ogre::v1::HardwareBuffer::HBL_READ_ONLY));
-			//Store the indices for the 3 vertex of this triangle
 			for (auto i = 0u; i < appendedIndexes; ++i)
 			{
-				mIndexBuffer[previousSize + i] = (offset + *pointerData++);
+				mIndexBuffer[previousSize + i] = offset + pointerData[i];
 			}
 			ibuf->unlock();
 		}
 
+		///Load Ogre V1 index data and populat the header, can take an offset when going through submesh by submesh
 		void appendV1IndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
 
 		//V2 Mesh buffer loading inspired by the solution here: http://www.ogre3d.org/forums/viewtopic.php?f=25&p=522494#p522494
@@ -112,39 +112,46 @@ namespace BtOgre
 		void getV2MeshBufferSize(const Ogre::Mesh* mesh);
 
 		///load the request and sends it to the VAO manager, this will map all tickets regarding that request, you will need to unmap them when you have finished
-		void RequestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests) const;
+		void requestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests) const;
 
 		///Load the vertex buffer data
-		void loadV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray requests);
+		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray requests);
 
 		///Load the index buffer data using the given type (16 or 32bit)
-		template<typename T> void loadV2MeshIndexBufferTyped(Ogre::AsyncTicketPtr asyncTicket, const unsigned& offset,
-			const size_t& perviousSize, const size_t& appendedIndices)
+		template<typename T> void loadV2IndexBuffer(Ogre::AsyncTicketPtr asyncTicket, const unsigned& offset,
+			const size_t& perviousSize, const size_t& appendedIndexes)
 		{
-			auto pData = static_cast<const T*>(asyncTicket->map());
-
-			for (auto i = 0; i < appendedIndices; ++i)
+			auto pointerData = static_cast<const T*>(asyncTicket->map());
+			for (auto i = 0; i < appendedIndexes; ++i)
 			{
-				mIndexBuffer[perviousSize + i] = offset + pData[i];
+				mIndexBuffer[perviousSize + i] = offset + pointerData[i];
 			}
-
 			asyncTicket->unmap();
 		}
 
 		///Load the index buffer data
-		void loadV2MeshIndexBuffer(const size_t& previousSize, const size_t& offset, const bool& indices32, Ogre::IndexBufferPacked* indexBuffer);
+		void extractV2SubMeshIndexBuffer(const size_t& previousSize, const size_t& offset, const bool& indices32, Ogre::IndexBufferPacked* indexBuffer);
 
 	protected:
+
+		///Vertex buffer of the object being processed
 		VertexBuffer	mVertexBuffer;
+
+		///Index buffer fo the object being processed
 		IndexBuffer		mIndexBuffer;
 
+		///Bounds of the object as a AABB min/max box
 		Ogre::Vector3	mBounds;
+
+		///Radius of a sphere that cointains the object bouns
 		Ogre::Real		mBoundRadius;
 
 		BoneIndex*		mBoneIndex;
 
+		///Transform to apply to every point of the vertex buffer
 		Ogre::Matrix4	mTransform;
 
+		///Scale vector eventually extracted from a parent nodeS
 		Ogre::Vector3	mScale;
 	};
 
@@ -152,33 +159,45 @@ namespace BtOgre
 	class StaticMeshToShapeConverter : public VertexIndexToShape
 	{
 	public:
+		///Mesh To Shape converter that take an Ogre V1 Renderable
 		StaticMeshToShapeConverter(Ogre::Renderable *rend, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
-		///Creaate a messh converter from am V2 mesh object
+		///Creaate a messh converter from am V1 entity object
 		StaticMeshToShapeConverter(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
 		///Create a mesh converter from a V1 mesh object
 		StaticMeshToShapeConverter(Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
+		///Create a mesh converter from a V2 Item object
 		StaticMeshToShapeConverter(Ogre::Item* item, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
 		///Default constructor; You can add a mesh/entity later
 		StaticMeshToShapeConverter();
 
+		///Default polymorphic destructor
 		virtual ~StaticMeshToShapeConverter() = default;
 
+		///Load an Ogre v1 entity
 		void addEntity(Ogre::v1::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
+		///Load an Ogre v1 Mesh
 		void addMesh(const Ogre::v1::Mesh *mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 
+		///Load an Ogre v2 Item
 		void addItem(Ogre::Item* item, const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
 
+		///Load an Ogre v2 Mesh
 		void addMesh(const Ogre::Mesh* mesh, const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
 
 	protected:
 
+		///Stored Entity
 		Ogre::v1::Entity*		mEntity;
+
+		///Stored Item
 		Ogre::Item*				mItem;
+
+		///Node where the entity and the item are stored (to extract a scale vector)
 		Ogre::SceneNode*		mNode;
 	};
 
