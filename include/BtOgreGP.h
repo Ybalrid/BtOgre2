@@ -24,9 +24,9 @@
 #include <OgreBitwise.h>
 
 #include <Vao/OgreAsyncTicket.h>
-#include <vao/OgreVertexArrayObject.h>
-#include <vao/OgreVertexBufferPacked.h>
-#include <vao/OgreVertexElements.h>
+#include <Vao/OgreVertexArrayObject.h>
+#include <Vao/OgreVertexBufferPacked.h>
+#include <Vao/OgreVertexElements.h>
 
 #include "BtOgreExtras.h"
 #include "BtOgre.hpp"
