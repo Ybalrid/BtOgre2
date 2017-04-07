@@ -116,7 +116,7 @@ namespace BtOgre
 		int mDebugOn;
 
 		///Name of the datablock
-		static constexpr char* unlitDatablockName{ "DebugLinesGenerated" };
+		static constexpr const char* unlitDatablockName{ "DebugLinesGenerated" };
 
 		///ID of the datblock
 		const Ogre::IdString unlitDatablockId;
