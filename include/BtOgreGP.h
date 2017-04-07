@@ -73,16 +73,16 @@ namespace BtOgre
 		const Ogre::Vector3* getVertices();
 
 		///Get the vertex count (size of vertex buffer) of the object
-		unsigned int getVertexCount();
+		size_t getVertexCount();
 
 		///Get the index buffer of the object (array of unsigned ints)
 		const unsigned int* getIndices();
 
 		///Get the index count(size of vertex buffer) from this object
-		unsigned int getIndexCount();
+		size_t getIndexCount();
 
 		///Get the number of triangles
-		unsigned int getTriangleCount();
+		size_t getTriangleCount();
 
 	protected:
 

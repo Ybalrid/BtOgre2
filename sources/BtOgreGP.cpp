@@ -49,17 +49,17 @@ void VertexIndexToShape::appendV1VertexData(const v1::VertexData *vertex_data)
 
 	//Get read only access to the row buffer
 	auto vertex = static_cast<unsigned char*>(vbuf->lock(v1::HardwareBuffer::HBL_READ_ONLY));
-	float* rawVertex; // this pointer will be used a a buffer to write the [float, float, float] array of the vertex
+	Real* rawVertex; // this pointer will be used a a buffer to write the [float, float, float] array of the vertex
 
 	//Write data to the vertex buffer
 	const auto vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
-	for (auto j = 0U; j < vertexCount; ++j)
+	for (auto j = size_t{ 0U }; j < vertexCount; ++j)
 	{
 		//Get pointer to the start of this vertex
 		posElem->baseVertexPointerToElement(vertex, &rawVertex);
 		vertex += vertexSize;
 
-		mVertexBuffer[previousSize + j] = (mTransform * Vector3{ rawVertex });
+		mVertexBuffer[previousSize + j] = mTransform * Vector3{ rawVertex };
 	}
 
 	//Release vertex buffer opened in read only
@@ -98,7 +98,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	auto curVertices = &mVertexBuffer.data()[prev_size];
 
 	const auto vertexCount = static_cast<unsigned int>(vertex_data->vertexCount);
-	for (auto j = 0U; j < vertexCount; ++j)
+	for (auto j = size_t{ 0U }; j < vertexCount; ++j)
 	{
 		bneElem->baseVertexPointerToElement(vertex, &pBone);
 		vertex += vSize;
@@ -159,7 +159,7 @@ Vector3 VertexIndexToShape::getSize()
 		auto vmin(v[0]);
 		auto vmax(v[0]);
 
-		for (unsigned int j = 1; j < vCount; j++)
+		for (auto j = size_t{ 1U }; j < vCount; j++)
 		{
 			vmin.x = std::min(vmin.x, v[j].x);
 			vmin.y = std::min(vmin.y, v[j].y);
@@ -183,7 +183,8 @@ const Vector3* VertexIndexToShape::getVertices()
 {
 	return mVertexBuffer.data();
 }
-unsigned int VertexIndexToShape::getVertexCount()
+
+size_t VertexIndexToShape::getVertexCount()
 {
 	return mVertexBuffer.size();
 }
@@ -191,12 +192,13 @@ const unsigned int* VertexIndexToShape::getIndices()
 {
 	return mIndexBuffer.data();
 }
-unsigned int VertexIndexToShape::getIndexCount()
+
+size_t VertexIndexToShape::getIndexCount()
 {
 	return mIndexBuffer.size();
 }
 
-inline unsigned VertexIndexToShape::getTriangleCount()
+inline size_t VertexIndexToShape::getTriangleCount()
 {
 	return getIndexCount() / 3;
 }
@@ -265,7 +267,7 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 	auto vertices = getVertices();
 
 	btVector3 vertexPos[3];
-	for (unsigned int n = 0; n < numFaces; ++n)
+	for (auto n = size_t{ 0U }; n < numFaces; ++n)
 	{
 		{
 			const auto& vec = vertices[*indices];
@@ -443,7 +445,7 @@ void VertexIndexToShape::getV2MeshBufferSize(const Mesh* mesh)
 	size_t numVertices = 0U;
 	size_t numIndices = 0U;
 
-	for (auto subMesh : mesh->getSubMeshes())
+	for (const auto subMesh : mesh->getSubMeshes())
 	{
 		numVertices += subMesh->mVao[0][0]->getVertexBuffers()[0]->getNumElements();
 		numIndices += subMesh->mVao[0][0]->getIndexBuffer()->getNumElements();
@@ -461,7 +463,7 @@ void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ver
 	case VET_HALF4:
 		for (size_t i = 0; i < subMeshVerticiesNum; ++i)
 		{
-			auto pos = reinterpret_cast<const uint16*>(requests[0].data);
+			auto pos = reinterpret_cast<const uint16*>(requests[0].data);	//Stored as 16 bits. Need to use Ogre::Bitwise utilities to extract a floating point form this
 			requests[0].data += requests[0].vertexBuffer->getBytesPerElement();
 			mVertexBuffer[i + subMeshOffset] = mTransform * Vector3{ Bitwise::halfToFloat(pos[0]), Bitwise::halfToFloat(pos[1]), Bitwise::halfToFloat(pos[2]) };
 		}
