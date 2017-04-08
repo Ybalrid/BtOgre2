@@ -175,7 +175,7 @@ const Vector3* VertexIndexToShape::getVertices()
 	return mVertexBuffer.data();
 }
 
-inline size_t VertexIndexToShape::getVertexCount() const
+size_t VertexIndexToShape::getVertexCount() const
 {
 	return mVertexBuffer.size();
 }
@@ -184,12 +184,12 @@ const unsigned int* VertexIndexToShape::getIndices()
 	return mIndexBuffer.data();
 }
 
-inline size_t VertexIndexToShape::getIndexCount() const
+size_t VertexIndexToShape::getIndexCount() const
 {
 	return mIndexBuffer.size();
 }
 
-inline size_t VertexIndexToShape::getTriangleCount() const
+size_t VertexIndexToShape::getTriangleCount() const
 {
 	return getIndexCount() / 3;
 }
