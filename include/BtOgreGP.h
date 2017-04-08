@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <algorithm>
+
 #include <btBulletDynamicsCommon.h>
 #include <Ogre.h>
 #include <OgreMesh2.h>
@@ -79,16 +81,16 @@ namespace BtOgre
 		const Ogre::Vector3* getVertices();
 
 		///Get the vertex count (size of vertex buffer) of the object
-		size_t getVertexCount();
+		size_t getVertexCount() const;
 
 		///Get the index buffer of the object (array of unsigned ints)
 		const unsigned int* getIndices();
 
 		///Get the index count(size of vertex buffer) from this object
-		size_t getIndexCount();
+		size_t getIndexCount() const;
 
 		///Get the number of triangles
-		size_t getTriangleCount();
+		size_t getTriangleCount() const;
 
 	protected:
 

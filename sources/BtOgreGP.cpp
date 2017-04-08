@@ -148,28 +148,22 @@ Real VertexIndexToShape::getRadius()
 
 Vector3 VertexIndexToShape::getSize()
 {
-	const auto vCount = getVertexCount();
-	if (mBounds == Vector3(-1, -1, -1) && vCount > 0)
+	if (mBounds == Vector3(-1, -1, -1) && getVertexCount())
 	{
-		const auto v = getVertices();
+		auto vmin = mVertexBuffer[0];
+		auto vmax = vmin;
 
-		auto vmin(v[0]);
-		auto vmax(v[0]);
-
-		for (auto i = size_t{ 1U }; i < vCount; i++)
+		for (const auto vertex : mVertexBuffer)
 		{
-			vmin.x = std::min(vmin.x, v[i].x);
-			vmin.y = std::min(vmin.y, v[i].y);
-			vmin.z = std::min(vmin.z, v[i].z);
-
-			vmax.x = std::max(vmax.x, v[i].x);
-			vmax.y = std::max(vmax.y, v[i].y);
-			vmax.z = std::max(vmax.z, v[i].z);
+			vmin.x = std::min(vmin.x, vertex.x);
+			vmin.y = std::min(vmin.y, vertex.y);
+			vmin.z = std::min(vmin.z, vertex.z);
+			vmax.x = std::max(vmax.x, vertex.x);
+			vmax.y = std::max(vmax.y, vertex.y);
+			vmax.z = std::max(vmax.z, vertex.z);
 		}
 
-		mBounds.x = vmax.x - vmin.x;
-		mBounds.y = vmax.y - vmin.y;
-		mBounds.z = vmax.z - vmin.z;
+		mBounds = vmax - vmin;
 	}
 
 	return mBounds;
@@ -181,7 +175,7 @@ const Vector3* VertexIndexToShape::getVertices()
 	return mVertexBuffer.data();
 }
 
-size_t VertexIndexToShape::getVertexCount()
+inline size_t VertexIndexToShape::getVertexCount() const
 {
 	return mVertexBuffer.size();
 }
@@ -190,12 +184,12 @@ const unsigned int* VertexIndexToShape::getIndices()
 	return mIndexBuffer.data();
 }
 
-size_t VertexIndexToShape::getIndexCount()
+inline size_t VertexIndexToShape::getIndexCount() const
 {
 	return mIndexBuffer.size();
 }
 
-inline size_t VertexIndexToShape::getTriangleCount()
+inline size_t VertexIndexToShape::getTriangleCount() const
 {
 	return getIndexCount() / 3;
 }
@@ -228,12 +222,24 @@ btBoxShape* VertexIndexToShape::createBox()
 
 btCylinderShape* VertexIndexToShape::createCylinder()
 {
-	const auto sz = getSize();
+	const auto sz = getSize()*.5f;
 
 	assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
 		("Size of Cylinder must be greater than zero on all axes"));
 
-	btCylinderShape* shape = new btCylinderShapeX(Convert::toBullet(sz * 0.5));
+	auto biggest = std::max(sz.x, std::max(sz.y, sz.z));
+
+	btCylinderShape* shape;
+
+	//Biggest is X. X is is the priority (was the old behavior of the lib) even if other axis are as "big" as x
+	if (biggest == sz.x)
+		shape = new btCylinderShapeX(Convert::toBullet(sz));
+	//Biggest is Z
+	else if (biggest == sz.z)
+		shape = new btCylinderShapeZ(Convert::toBullet(sz));
+	//Biggest is Y
+	else
+		shape = new btCylinderShape(Convert::toBullet(sz));
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
@@ -250,12 +256,13 @@ btConvexHullShape* VertexIndexToShape::createConvex()
 
 	return shape;
 }
+
 btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 {
 	assert(getVertexCount() && (getIndexCount() >= 6) &&
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-	auto numFaces = getTriangleCount();
+	const auto numFaces = getTriangleCount();
 	auto trimesh = new btTriangleMesh();
 
 	btVector3 vertexPos[3];
@@ -274,7 +281,9 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 
 	return shape;
 }
-btCapsuleShape* VertexIndexToShape::createCapsule() {
+
+btCapsuleShape* VertexIndexToShape::createCapsule()
+{
 	const auto sz = getSize();
 
 	assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
@@ -289,11 +298,13 @@ btCapsuleShape* VertexIndexToShape::createCapsule() {
 		radius = std::max(sz.x, sz.z);
 		shape = new btCapsuleShape(radius * 0.5f, height * 0.5f);
 	}
-	else if (height == sz.x) {
+	else if (height == sz.x)
+	{
 		radius = std::max(sz.y, sz.z);
 		shape = new btCapsuleShapeX(radius * 0.5f, height * 0.5f);
 	}
-	else {
+	else
+	{
 		radius = std::max(sz.x, sz.y);
 		shape = new btCapsuleShapeZ(radius * 0.5f, height * 0.5f);
 	}
@@ -314,6 +325,7 @@ VertexIndexToShape::~VertexIndexToShape()
 		delete mBoneIndex;
 	}
 }
+
 VertexIndexToShape::VertexIndexToShape(const Matrix4 &transform) :
 	mBounds(Vector3(-1, -1, -1)),
 	mBoundRadius(-1),
@@ -345,6 +357,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Entity *entity, const
 {
 	addEntity(entity, transform);
 }
+
 StaticMeshToShapeConverter::StaticMeshToShapeConverter(v1::Mesh *mesh, const Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity(nullptr),
@@ -371,6 +384,7 @@ StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const M
 	if (op.useIndexes)
 		appendV1IndexData(op.indexData);
 }
+
 void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &transform)
 {
 	mEntity = entity;
@@ -379,6 +393,7 @@ void StaticMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &tr
 
 	addMesh(mEntity->getMesh().get(), transform);
 }
+
 void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius
@@ -559,7 +574,7 @@ AnimatedMeshToShapeConverter::AnimatedMeshToShapeConverter(v1::Entity *entity, c
 {
 	addEntity(entity, transform);
 }
-//------------------------------------------------------------------------------------------------
+
 AnimatedMeshToShapeConverter::AnimatedMeshToShapeConverter() :
 	VertexIndexToShape(),
 	mEntity(nullptr),
@@ -568,12 +583,12 @@ AnimatedMeshToShapeConverter::AnimatedMeshToShapeConverter() :
 	mTransformedVerticesTempSize(0)
 {
 }
-//------------------------------------------------------------------------------------------------
+
 AnimatedMeshToShapeConverter::~AnimatedMeshToShapeConverter()
 {
 	delete[] mTransformedVerticesTemp;
 }
-//------------------------------------------------------------------------------------------------
+
 void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius
@@ -617,7 +632,7 @@ void AnimatedMeshToShapeConverter::addEntity(v1::Entity *entity, const Matrix4 &
 
 	mEntity->removeSoftwareAnimationRequest(false);
 }
-//------------------------------------------------------------------------------------------------
+
 void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix4 &transform)
 {
 	// Each entity added need to reset size and radius
@@ -653,7 +668,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 		}
 	}
 }
-//------------------------------------------------------------------------------------------------
+
 bool AnimatedMeshToShapeConverter::getBoneVertices(unsigned char bone,
 	unsigned int &vertex_count,
 	Vector3* &vertices,
@@ -692,7 +707,7 @@ bool AnimatedMeshToShapeConverter::getBoneVertices(unsigned char bone,
 	}
 	return true;
 }
-//------------------------------------------------------------------------------------------------
+
 btBoxShape* AnimatedMeshToShapeConverter::createAlignedBox(unsigned char bone,
 	const Vector3 &bonePosition,
 	const Quaternion &boneOrientation)
@@ -728,7 +743,7 @@ btBoxShape* AnimatedMeshToShapeConverter::createAlignedBox(unsigned char bone,
 
 	return box;
 }
-//------------------------------------------------------------------------------------------------
+
 bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
 	const Vector3 &bonePosition,
 	const Quaternion &boneOrientation,
@@ -802,7 +817,7 @@ bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
 
 	return true;
 }
-//------------------------------------------------------------------------------------------------
+
 btBoxShape *AnimatedMeshToShapeConverter::createOrientedBox(unsigned char bone,
 	const Vector3 &bonePosition,
 	const Quaternion &boneOrientation)
