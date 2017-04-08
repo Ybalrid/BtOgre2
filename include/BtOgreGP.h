@@ -101,7 +101,7 @@ namespace BtOgre
 		template<typename T> void loadV1IndexBuffer(Ogre::v1::HardwareIndexBufferSharedPtr ibuf, const size_t& offset,
 			const size_t& previousSize, const size_t& appendedIndexes)
 		{
-			auto pointerData = static_cast<T*>(ibuf->lock(Ogre::v1::HardwareBuffer::HBL_READ_ONLY));
+			auto pointerData = static_cast<const T*>(ibuf->lock(Ogre::v1::HardwareBuffer::HBL_READ_ONLY));
 			for (auto i = 0u; i < appendedIndexes; ++i)
 			{
 				mIndexBuffer[previousSize + i] = static_cast<unsigned>(offset + pointerData[i]);
