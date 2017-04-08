@@ -80,7 +80,7 @@ namespace BtOgre
 		Ogre::SceneManager* smgr;
 
 		///Vertex index
-		int index;
+		size_t index;
 
 	public:
 		///Construct the line drawer, need the name of the scene manager and the datablock (material)
@@ -134,6 +134,10 @@ namespace BtOgre
 		LineDrawer drawer;
 
 	public:
+
+		///Name of the resource group to be used by the debug drawer when creating materials (datablocks)
+		static constexpr const char* BtOgre21ResourceGroup{ "BtOgre21" };
+
 		///Debug drawer of Bullet.
 		/// \param node SceneNode (usually the Root node) where the lines will be attached. A static child node will be created
 		/// \param world Pointer to the btDynamicsWolrd you're using

@@ -5,22 +5,22 @@ using namespace BtOgre;
 
 btQuaternion Convert::toBullet(const Quaternion& q)
 {
-	return btQuaternion(q.x, q.y, q.z, q.w);
+	return { q.x, q.y, q.z, q.w };
 }
 
 btVector3 Convert::toBullet(const Vector3& v)
 {
-	return btVector3(v.x, v.y, v.z);
+	return { v.x, v.y, v.z };
 }
 
 Quaternion Convert::toOgre(const btQuaternion& q)
 {
-	return Quaternion(q.w(), q.x(), q.y(), q.z());
+	return { q.w(), q.x(), q.y(), q.z() };
 }
 
 Vector3 Convert::toOgre(const btVector3& v)
 {
-	return Vector3(v.x(), v.y(), v.z());
+	return { v.x(), v.y(), v.z() };
 }
 
 LineDrawer::LineDrawer(SceneNode* node, String datablockId, String smgrName) :
@@ -53,12 +53,12 @@ void LineDrawer::addLine(const Vector3& start, const Vector3& end, const ColourV
 
 void LineDrawer::checkForMaterial() const
 {
-	auto hlmsUnlit = static_cast<HlmsUnlit*>(Root::getSingleton().getHlmsManager()->getHlms(HLMS_UNLIT));
-	auto datablock = hlmsUnlit->getDatablock(datablockToUse);
+	const auto hlmsUnlit = static_cast<HlmsUnlit*>(Root::getSingleton().getHlmsManager()->getHlms(HLMS_UNLIT));
+	const auto datablock = hlmsUnlit->getDatablock(datablockToUse);
 
 	if (datablock) return;
 	LogManager::getSingleton().logMessage("BtOgre's datablock not found, creating...");
-	auto createdDatablock = hlmsUnlit->createDatablock(datablockToUse, datablockToUse, HlmsMacroblock(), HlmsBlendblock(), HlmsParamVec(), true, BLANKSTRING, "BtOgre");
+	auto createdDatablock = hlmsUnlit->createDatablock(datablockToUse, datablockToUse, {}, {}, {}, true, BLANKSTRING, DebugDrawer::BtOgre21ResourceGroup);
 
 	if (!createdDatablock) throw std::runtime_error(std::string("BtOgre Line Drawer failed to create HLMS Unlit datablock ") + datablockToUse);
 }
@@ -75,8 +75,8 @@ void LineDrawer::update()
 
 	checkForMaterial();
 	manualObject->begin(datablockToUse, OT_LINE_LIST);
-	index = 0;
 
+	index = 0;
 	for (const auto& l : lines)
 	{
 		manualObject->position(l.start);
@@ -101,8 +101,8 @@ DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, String smgrNam
 	scene(smgrName),
 	drawer(mNode, unlitDatablockName, scene)
 {
-	if (!ResourceGroupManager::getSingleton().resourceGroupExists("BtOgre"))
-		ResourceGroupManager::getSingleton().createResourceGroup("BtOgre");
+	if (!ResourceGroupManager::getSingleton().resourceGroupExists(BtOgre21ResourceGroup))
+		ResourceGroupManager::getSingleton().createResourceGroup(BtOgre21ResourceGroup);
 }
 
 void DebugDrawer::setUnlitDiffuseMultiplier(float value)
@@ -120,7 +120,8 @@ void DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btV
 
 	const auto ogreFrom = Convert::toOgre(from);
 	const auto ogreTo = Convert::toOgre(to);
-	ColourValue ogreColor(color.x(), color.y(), color.z(), 1);
+
+	ColourValue ogreColor{ color.x(), color.y(), color.z(), 1.0f };
 	ogreColor *= unlitDiffuseMultiplier;
 
 	drawer.addLine(ogreFrom, ogreTo, ogreColor);

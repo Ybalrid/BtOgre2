@@ -42,6 +42,9 @@ namespace BtOgre
 	///Type of an index buffer is an array of unsigned ints
 	using IndexBuffer = std::vector<unsigned int>;
 
+	///
+	/// Converter from vertex and index buffer to Bullet BtCollisionShape. Load vertex and index buffer from Ogre Item, Etity, Mesh and v1::Mesh
+	///
 	class VertexIndexToShape
 	{
 	public:
@@ -115,13 +118,13 @@ namespace BtOgre
 		//V2 Mesh buffer loading inspired by the solution here: http://www.ogre3d.org/forums/viewtopic.php?f=25&p=522494#p522494
 
 		///Go through the submeshes and set the size of the {vertex;index} buffers
-		void getV2MeshBufferSize(const Ogre::Mesh* mesh);
+		void getV2MeshBufferSize(const Ogre::Mesh* mesh, size_t& previousVertexSize, size_t& previousIndexSize);
 
 		///load the request and sends it to the VAO manager, this will map all tickets regarding that request, you will need to unmap them when you have finished
 		static void requestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests);
 
 		///Load the vertex buffer data
-		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray requests);
+		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject::ReadRequestsArray requests, const size_t& prevSize);
 
 		///Load the index buffer data using the given type (16 or 32bit) from a V2 VAO index async ticket
 		template<typename T> void loadV2IndexBuffer(Ogre::AsyncTicketPtr asyncTicket, const size_t& offset,
