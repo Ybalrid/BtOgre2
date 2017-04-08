@@ -25,8 +25,10 @@ target_link_libraries(
 	BtOgre21DEMO 
 	${BULLET_LIBRARIES} 
 	${OGRE_LIBRARIES}
-	${OGRE_LIBRARY_DIR_REL}/OgreHlmsPbs.lib 
-	${OGRE_LIBRARY_DIR_REL}/OgreHlmsUnlit.lib 
+    #TODO find the proper way to link the HLMS libraries
+    ${OGRE_LIBRARY_DIR_REL}/OgreHlmsPbs.lib    
+	${OGRE_LIBRARY_DIR_REL}/OgreHlmsUnlit.lib
+    #TODO well... Should create a findBtOgre21 cmake thingy also...
 	${BTOGRE21_LIB}/BtOgre21.lib)
 
 if(MSVC)
