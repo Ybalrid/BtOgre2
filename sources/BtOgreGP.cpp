@@ -514,6 +514,7 @@ void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transf
 	//Theses variables will hold the current size of this buffer
 	size_t prevVertexSize;
 	size_t prevIndexSize;
+	size_t appendedIndexes = 0;
 
 	//This will extend the vertex/index buffers to fit the data
 	getV2MeshBufferSize(mesh, prevVertexSize, prevIndexSize);
@@ -549,13 +550,14 @@ void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transf
 		vao->unmapAsyncTickets(requests);
 
 		//Read index data
-		extractV2SubMeshIndexBuffer(prevIndexSize,
+		extractV2SubMeshIndexBuffer(prevIndexSize + appendedIndexes,
 			indexOffset,
 			vao->getIndexBuffer()->getIndexType() == IndexBufferPacked::IT_32BIT,
 			indexBuffer);
 
 		//offset the index values by the number of vertex we got from that VAO
 		indexOffset += vertexBuffers[0]->getNumElements();
+		appendedIndexes += indexBuffer[0].getNumElements();
 	}
 }
 
