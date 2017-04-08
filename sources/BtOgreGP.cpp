@@ -103,9 +103,11 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 		bneElem->baseVertexPointerToElement(vertex, &pBone);
 		vertex += vSize;
 
-		const unsigned char currBone = (indexMap) ? (*indexMap)[*pBone] : *pBone;
+		const auto currBone = static_cast<unsigned char>(indexMap ? (*indexMap)[*pBone] : *pBone);
 		i = mBoneIndex->find(currBone);
+
 		Vector3Array* l = nullptr;
+
 		if (i == mBoneIndex->end())
 		{
 			l = new Vector3Array;
@@ -123,7 +125,7 @@ void VertexIndexToShape::addAnimatedVertexData(const v1::VertexData *vertex_data
 	vbuf->unlock();
 }
 
-void VertexIndexToShape::appendV1IndexData(v1::IndexData *data, const unsigned int offset)
+void VertexIndexToShape::appendV1IndexData(v1::IndexData *data, const size_t offset)
 {
 	const auto appendedIndexes = data->indexCount;
 	const auto previousSize = mIndexBuffer.size();
@@ -141,10 +143,10 @@ void VertexIndexToShape::appendV1IndexData(v1::IndexData *data, const unsigned i
 
 Real VertexIndexToShape::getRadius()
 {
-	if (mBoundRadius == (-1))
+	if (mBoundRadius == -1)
 	{
 		getSize();
-		mBoundRadius = (std::max(mBounds.x, std::max(mBounds.y, mBounds.z)) * 0.5);
+		mBoundRadius = std::max(mBounds.x, std::max(mBounds.y, mBounds.z)) * 0.5f;
 	}
 	return mBoundRadius;
 }
@@ -247,7 +249,7 @@ btConvexHullShape* VertexIndexToShape::createConvex()
 	assert(getVertexCount() && (getIndexCount() >= 6) &&
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-	auto shape = new btConvexHullShape(static_cast<btScalar*>(&mVertexBuffer[0].x), getVertexCount(), sizeof(Vector3));
+	auto shape = new btConvexHullShape{ static_cast<btScalar*>(&mVertexBuffer[0].x), int(getVertexCount()), sizeof(Vector3) };
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
 
@@ -258,37 +260,14 @@ btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 	assert(getVertexCount() && (getIndexCount() >= 6) &&
 		("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-	//Todo: create a "get triangle count" method
 	auto numFaces = getTriangleCount();
-
 	auto trimesh = new btTriangleMesh();
 
-	auto indices = const_cast<unsigned int*>(getIndices());
-	auto vertices = getVertices();
-
 	btVector3 vertexPos[3];
-	for (auto n = size_t{ 0U }; n < numFaces; ++n)
+	for (auto i = size_t{ 0U }; i < numFaces; ++i)
 	{
-		{
-			const auto& vec = vertices[*indices];
-			vertexPos[0][0] = vec.x;
-			vertexPos[0][1] = vec.y;
-			vertexPos[0][2] = vec.z;
-		}
-		{
-			const auto& vec = vertices[*(indices + 1)];
-			vertexPos[1][0] = vec.x;
-			vertexPos[1][1] = vec.y;
-			vertexPos[1][2] = vec.z;
-		}
-		{
-			const auto& vec = vertices[*(indices + 2)];
-			vertexPos[2][0] = vec.x;
-			vertexPos[2][1] = vec.y;
-			vertexPos[2][2] = vec.z;
-		}
-
-		indices += 3;
+		for (const auto j : { 0, 1, 2 })
+			vertexPos[j] = Convert::toBullet(mVertexBuffer[mIndexBuffer[3 * i + j]]);
 
 		trimesh->addTriangle(vertexPos[0], vertexPos[1], vertexPos[2]);
 	}
@@ -313,15 +292,15 @@ btCapsuleShape* VertexIndexToShape::createCapsule() {
 	if (height == sz.y)
 	{
 		radius = std::max(sz.x, sz.z);
-		shape = new btCapsuleShape(radius *0.5, height *0.5);
+		shape = new btCapsuleShape(radius * 0.5f, height * 0.5f);
 	}
 	else if (height == sz.x) {
 		radius = std::max(sz.y, sz.z);
-		shape = new btCapsuleShapeX(radius *0.5, height *0.5);
+		shape = new btCapsuleShapeX(radius * 0.5f, height * 0.5f);
 	}
 	else {
 		radius = std::max(sz.x, sz.y);
-		shape = new btCapsuleShapeZ(radius *0.5, height *0.5);
+		shape = new btCapsuleShapeZ(radius * 0.5f, height * 0.5f);
 	}
 
 	shape->setLocalScaling(Convert::toBullet(mScale));
@@ -424,13 +403,13 @@ void StaticMeshToShapeConverter::addMesh(const v1::Mesh *mesh, const Matrix4 &tr
 		appendV1VertexData(mesh->sharedVertexData[0]);
 	}
 
-	for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
+	for (unsigned short i = 0; i < mesh->getNumSubMeshes(); ++i)
 	{
 		auto sub_mesh = mesh->getSubMesh(i);
 
 		if (!sub_mesh->useSharedVertices)
 		{
-			appendV1IndexData(sub_mesh->indexData[0], getVertexCount());
+			appendV1IndexData(sub_mesh->indexData[0], static_cast<unsigned int>(getVertexCount()));
 			appendV1VertexData(sub_mesh->vertexData[0]);
 		}
 		else
@@ -653,7 +632,7 @@ void AnimatedMeshToShapeConverter::addMesh(const v1::MeshPtr &mesh, const Matrix
 			&mesh->sharedBlendIndexToBoneIndexMap);
 	}
 
-	for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
+	for (unsigned short i = 0; i < mesh->getNumSubMeshes(); ++i)
 	{
 		auto sub_mesh = mesh->getSubMesh(i);
 
@@ -767,7 +746,7 @@ bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
 		{
 			box_kCenter += vertices[c];
 		}
-		const Real invVertexCount = 1.0 / vertex_count;
+		const auto invVertexCount = 1.0f / vertex_count;
 		box_kCenter *= invVertexCount;
 	}
 	auto orient = boneOrientation;
@@ -808,15 +787,15 @@ bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
 			fY2Max = fY2;
 	}
 
-	box_afExtent.x = Real(0.5)*(fY0Max - fY0Min);
-	box_afExtent.y = Real(0.5)*(fY1Max - fY1Min);
-	box_afExtent.z = Real(0.5)*(fY2Max - fY2Min);
+	box_afExtent.x = Real(0.5f)*(fY0Max - fY0Min);
+	box_afExtent.y = Real(0.5f)*(fY1Max - fY1Min);
+	box_afExtent.z = Real(0.5f)*(fY2Max - fY2Min);
 
-	box_kCenter += 0.5*(fY0Max + fY0Min)*box_akAxis[0] +
-		0.5*(fY1Max + fY1Min)*box_akAxis[1] +
-		0.5*(fY2Max + fY2Min)*box_akAxis[2];
+	box_kCenter += 0.5f*(fY0Max + fY0Min)*box_akAxis[0] +
+		0.5f*(fY1Max + fY1Min)*box_akAxis[1] +
+		0.5f*(fY2Max + fY2Min)*box_akAxis[2];
 
-	box_afExtent *= 2.0;
+	box_afExtent *= 2.0f;
 
 	return true;
 }

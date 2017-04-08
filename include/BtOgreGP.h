@@ -33,8 +33,8 @@
 
 namespace BtOgre
 {
-	using BoneIndex = std::map<unsigned char, Vector3Array*>;
-	using BoneKeyIndex = std::pair<unsigned short, Vector3Array*>;
+	using BoneIndex = std::map<unsigned, Vector3Array*>;
+	using BoneKeyIndex = std::pair<unsigned, Vector3Array*>;
 
 	///Type of a vertex buffer is an vector of Vector3
 	using VertexBuffer = std::vector<Ogre::Vector3>;
@@ -48,7 +48,10 @@ namespace BtOgre
 		VertexIndexToShape(const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
 		virtual ~VertexIndexToShape();
 
+		///Get the object bounding radius
 		Ogre::Real getRadius();
+
+		///Get the object bounding size vector
 		Ogre::Vector3 getSize();
 
 		///Return a spherical bullet collision shape from this object
@@ -86,25 +89,28 @@ namespace BtOgre
 
 	protected:
 
+		///Append V2 Vertex data to the vertex buffer
 		void appendV1VertexData(const Ogre::v1::VertexData *vertex_data);
 
+		///Add animated vertex data
 		void addAnimatedVertexData(const Ogre::v1::VertexData *vertex_data,
 			const Ogre::v1::VertexData *blended_data,
 			const Ogre::v1::Mesh::IndexMap *indexMap);
 
-		template<typename T> void loadV1IndexBuffer(Ogre::v1::HardwareIndexBufferSharedPtr ibuf, const unsigned int& offset,
+		///Load the index data using the given type (16 or 32bit) from a v1 hardwareIndexBuffer
+		template<typename T> void loadV1IndexBuffer(Ogre::v1::HardwareIndexBufferSharedPtr ibuf, const size_t& offset,
 			const size_t& previousSize, const size_t& appendedIndexes)
 		{
 			auto pointerData = static_cast<T*>(ibuf->lock(Ogre::v1::HardwareBuffer::HBL_READ_ONLY));
 			for (auto i = 0u; i < appendedIndexes; ++i)
 			{
-				mIndexBuffer[previousSize + i] = offset + pointerData[i];
+				mIndexBuffer[previousSize + i] = static_cast<unsigned>(offset + pointerData[i]);
 			}
 			ibuf->unlock();
 		}
 
 		///Load Ogre V1 index data and populat the header, can take an offset when going through submesh by submesh
-		void appendV1IndexData(Ogre::v1::IndexData *data, const unsigned int offset = 0);
+		void appendV1IndexData(Ogre::v1::IndexData *data, const size_t offset = 0);
 
 		//V2 Mesh buffer loading inspired by the solution here: http://www.ogre3d.org/forums/viewtopic.php?f=25&p=522494#p522494
 
@@ -117,14 +123,14 @@ namespace BtOgre
 		///Load the vertex buffer data
 		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray requests);
 
-		///Load the index buffer data using the given type (16 or 32bit)
-		template<typename T> void loadV2IndexBuffer(Ogre::AsyncTicketPtr asyncTicket, const unsigned& offset,
+		///Load the index buffer data using the given type (16 or 32bit) from a V2 VAO index async ticket
+		template<typename T> void loadV2IndexBuffer(Ogre::AsyncTicketPtr asyncTicket, const size_t& offset,
 			const size_t& perviousSize, const size_t& appendedIndexes)
 		{
 			auto pointerData = static_cast<const T*>(asyncTicket->map());
 			for (auto i = 0; i < appendedIndexes; ++i)
 			{
-				mIndexBuffer[perviousSize + i] = offset + pointerData[i];
+				mIndexBuffer[perviousSize + i] = static_cast<unsigned>(offset + pointerData[i]);
 			}
 			asyncTicket->unmap();
 		}
