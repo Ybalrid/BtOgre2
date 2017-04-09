@@ -83,7 +83,9 @@ protected:
 	unsigned long milliNow, milliLast;
 
 public:
-	BtOgreTestApplication()
+	BtOgreTestApplication() :
+        milliNow{0},
+        milliLast{0}
 	{
 		//Bullet initialisation.
 		mBroadphase = new btAxisSweep3(btVector3(-10000, -10000, -10000), btVector3(10000, 10000, 10000), 1024);
