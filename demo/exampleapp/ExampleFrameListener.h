@@ -104,7 +104,7 @@ public:
 
 		win->getCustomAttribute("WINDOW", &windowHnd);
 		windowHndStr << windowHnd;
-		pl.insert(std::make_pair(std::string("WINDOW"), windowHndStr.str()));
+		pl.insert(make_pair(std::string("WINDOW"), windowHndStr.str()));
 
 		mInputManager = OIS::InputManager::createInputSystem(pl);
 
@@ -317,7 +317,7 @@ public:
 
 		bool buffJ = (mJoy) ? mJoy->buffered() : true;
 
-		Ogre::Vector3 lastMotion = mTranslateVector;
+		Vector3 lastMotion = mTranslateVector;
 
 		//Check if one of the devices is not buffered
 		if (!mMouse->buffered() || !mKeyboard->buffered() || !buffJ)
@@ -333,7 +333,7 @@ public:
 
 			mRotX = 0;
 			mRotY = 0;
-			mTranslateVector = Ogre::Vector3::ZERO;
+			mTranslateVector = Vector3::ZERO;
 		}
 
 		//Check to see which device is not buffered, and handle it
@@ -345,7 +345,7 @@ public:
 				return false;
 
 		// ramp up / ramp down speed
-		if (mTranslateVector == Ogre::Vector3::ZERO)
+		if (mTranslateVector == Vector3::ZERO)
 		{
 			// decay (one third speed)
 			mCurrentSpeed -= evt.timeSinceLastFrame * 0.3;

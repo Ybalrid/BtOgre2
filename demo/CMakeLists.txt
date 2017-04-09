@@ -5,15 +5,17 @@ project(BtOgre21DEMO)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake-extras/)
 
 find_package(Bullet REQUIRED)
-find_package(OGRE REQUIRED)
+find_package(OGRE COMPONENTS HlmsPbs HlmsUnlit REQUIRED)
 
-set (BTOGRE21_INCLUDE "notSet" CACHE PATH "Where BtOgre21.hpp is located")
-set (BTOGRE21_LIB "notSet" CACHE PATH "Wher is BtOgre21.lib is located")
+set (BTOGRE21_INCLUDE "notSet" CACHE PATH "Directory where BtOgre21.hpp is located")
+set (BTOGRE21_LIB "notSet" CACHE PATH "Directory where is BtOgre21.lib is located")
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/exampleapp
 	${BULLET_INCLUDE_DIRS}
 	${OGRE_INCLUDE_DIRS}
+	${OGRE_HlmsPbs_INCLUDE_DIRS}
+	${OGRE_HlmsUnlit_INCLUDE_DIRS}
 	${BTOGRE21_INCLUDE}
 )
 
@@ -25,9 +27,8 @@ target_link_libraries(
 	BtOgre21DEMO 
 	${BULLET_LIBRARIES} 
 	${OGRE_LIBRARIES}
-    #TODO find the proper way to link the HLMS libraries
-    ${OGRE_LIBRARY_DIR_REL}/OgreHlmsPbs.lib    
-	${OGRE_LIBRARY_DIR_REL}/OgreHlmsUnlit.lib
+	${OGRE_HlmsPbs_LIBRARIES}
+	${OGRE_HlmsUnlit_LIBRARIES}
     #TODO well... Should create a findBtOgre21 cmake thingy also...
 	${BTOGRE21_LIB}/BtOgre21.lib)
 
