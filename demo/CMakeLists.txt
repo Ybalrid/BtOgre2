@@ -21,6 +21,11 @@ include_directories(
 
 link_directories(${BTOGRE21_LIB})
 
+if(UNIX)
+    set (BtOgre21_LIBRARIES ${BTOGRE21_LIB}/libBtOgre21.a)
+elseif(WIN32)
+    set (BtOgre21_LIBRARIES ${BTOGRE21_LIB}/BtOgre21.lib)
+endif(UNIX)
 
 add_executable(BtOgre21DEMO main.cpp exampleapp/ExampleApplication.h exampleapp/ExampleFrameListener.h)
 target_link_libraries(
@@ -29,8 +34,8 @@ target_link_libraries(
 	${OGRE_LIBRARIES}
 	${OGRE_HlmsPbs_LIBRARIES}
 	${OGRE_HlmsUnlit_LIBRARIES}
-    #TODO well... Should create a findBtOgre21 cmake thingy also...
-	${BTOGRE21_LIB}/BtOgre21.lib)
+    ${BtOgre21_LIBRARIES}
+    )
 
 if(MSVC)
    set_target_properties(BtOgre21DEMO PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
