@@ -46,5 +46,7 @@ endif ()
 
 #install dependencies
 file(COPY data DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY HLMS DESTINATION ${CMAKE_BINARY_DIR})
-
+file(COPY ${OGRE_MEDIA_DIR}/Hlms DESTINATION ${CMAKE_BINARY_DIR}/HLMS/)
+if(UNIX)
+    file(COPY ${OGRE_MEDIA_DIR}/../plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
+endif()
