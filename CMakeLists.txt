@@ -28,4 +28,5 @@ target_link_libraries(BtOgre21 ${BULLET_LIBRARIES} ${OGRE_LIBRARIES})
 
 INSTALL(TARGETS BtOgre21 DESTINATION "lib/BtOgre21")
 INSTALL(FILES include/BtOgrePG.h include/BtOgreGP.h include/BtOgreExtras.h include/BtOgre.hpp DESTINATION "include/BtOgre21")
-INSTALL(FILES CMake DESTINATION "lib/BtOgre21")
+file (COPY CMake DESTINATION ${CMAKE_BINARY_DIR})
+INSTALL(DIRECTORY CMake DESTINATION "lib/BtOgre21")
