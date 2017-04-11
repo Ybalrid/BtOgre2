@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 2.8.0)
 
 project(BtOgre21DEMO)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake-extras/)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake-extras/ ${PROJECT_SOURCE_DIR}/../CMake)
 
 find_package(Bullet REQUIRED)
 find_package(OGRE COMPONENTS HlmsPbs HlmsUnlit REQUIRED)
-
-set(BTOGRE21_INCLUDE "notSet" CACHE PATH "Directory where BtOgre21.hpp is located")
-set(BTOGRE21_LIB "notSet" CACHE PATH "Directory where is BtOgre21.lib is located")
+find_package(BtOgre21 REQUIRED)
 
 include_directories(
         ${PROJECT_SOURCE_DIR}/exampleapp
@@ -16,16 +14,9 @@ include_directories(
         ${OGRE_INCLUDE_DIRS}
         ${OGRE_HlmsPbs_INCLUDE_DIRS}
         ${OGRE_HlmsUnlit_INCLUDE_DIRS}
-        ${BTOGRE21_INCLUDE}
+        ${BtOgre21_INCLUDE_DIRS}
 )
 
-link_directories(${BTOGRE21_LIB})
-
-if (UNIX)
-    set(BtOgre21_LIBRARIES ${BTOGRE21_LIB}/libBtOgre21.a)
-elseif (WIN32)
-    set(BtOgre21_LIBRARIES ${BTOGRE21_LIB}/BtOgre21.lib)
-endif (UNIX)
 
 add_executable(BtOgre21DEMO main.cpp exampleapp/ExampleApplication.h exampleapp/ExampleFrameListener.h)
 target_link_libraries(
