@@ -25,3 +25,7 @@ endif()
 
 add_library(BtOgre21 STATIC sources/BtOgreGP.cpp sources/BtOgrePG.cpp sources/BtOgreExtras.cpp include/BtOgre.hpp include/BtOgreExtras.h include/BtOgreGP.h include/BtOgrePG.h)
 target_link_libraries(BtOgre21 ${BULLET_LIBRARIES} ${OGRE_LIBRARIES})
+
+INSTALL(TARGETS BtOgre21 DESTINATION "lib/BtOgre21")
+INSTALL(FILES include/BtOgrePG.h include/BtOgreGP.h include/BtOgreExtras.h include/BtOgre.hpp DESTINATION "include/BtOgre21")
+
