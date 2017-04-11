@@ -2,8 +2,8 @@
 
 set(BtOgre21_ROOT "notSet" CACHE PATH "Where your BtOgre21 instlallation is")
 
-find_path(BtOgre21_INCLUDE_DIR BtOgre.hpp HINTS ${BtOgre21_ROOT} PATH_SUFFIXES BtOgre21)
-find_library(BtOgre21_LIBRARY libBtOgre21.a BtOgre21.lib libBtOgre21 BtOgre21 HINTS ${BtOgre21_ROOT} PATH_SUFFIXES BtOgre21 BtOgre lib)
+find_path(BtOgre21_INCLUDE_DIR BtOgre.hpp HINTS ${BtOgre21_ROOT}/include PATH_SUFFIXES BtOgre21)
+find_library(BtOgre21_LIBRARY libBtOgre21.a BtOgre21.lib libBtOgre21 BtOgre21 HINTS ${BtOgre21_ROOT}/lib PATH_SUFFIXES BtOgre21 BtOgre lib)
 
 
 include(FindPackageHandleStandardArgs)
