@@ -84,8 +84,8 @@ protected:
 
 public:
 	BtOgreTestApplication() :
-        milliNow{0},
-        milliLast{0}
+		milliNow{ 0 },
+		milliLast{ 0 }
 	{
 		//Bullet initialisation.
 		mBroadphase = new btAxisSweep3(btVector3(-10000, -10000, -10000), btVector3(10000, 10000, 10000), 1024);
@@ -151,7 +151,7 @@ protected:
 	void declareHlmsLibrary(const String&& path)
 	{
 #ifdef _DEBUG
-		if (string(SL) != "GLSL" || string(Ogre::Root::getSingleton().getRenderSystem()->getName()) != "OpenGL 3+ Rendering Subsystem")
+		if (std::string(SL) != "GLSL" || std::string(Ogre::Root::getSingleton().getRenderSystem()->getName()) != "OpenGL 3+ Rendering Subsystem")
 			throw std::runtime_error("This function is OpenGL only. Please use the RenderSytem_GL3+ in the Ogre configuration!");
 #endif
 		auto hlmsFolder = path;
