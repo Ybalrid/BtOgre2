@@ -10,13 +10,25 @@ This project is Free and Open Source, licensed under the term of the zLib licens
 
 ## Build and usage instructions
 
-You'll need to define some variables for CMake
+### Building BtOgre21
+
+You will need CMake to build the library.
+
+Depending on your installation, you may need to have to define theses variables for CMake (notably on MS Windows):
 
  - `OGRE_HOME` : where your Ogre **2.1** SDK is located
  - `BULLET_ROOT` : where your Bullet directory is located
 
 Then you'll be able to use your favorite compiler and toolchain to build this project.
-(Was only tested with Visual Studio 14 (2015) x64)
+(Was only tested with Visual Studio 14 (2015) x64 and GCC 6.3.1)
+
+Then you can build and install (e.g. `make; sudo make install`) the library.
+
+### Using BtOgre21
+
+In /CMake/ you will find a CMake module that will permit you to "try" to find an installed version of BtOgre21. You can help it by defining the CMake Cache variable `BtOgre21_ROOT` with the PATH to your BtOgre21 installation.
+
+This will populate the usual variables for libraries with CMake. See the /demo/ directory for an example on how to use it.
 
 ## Attribution of original work
 
