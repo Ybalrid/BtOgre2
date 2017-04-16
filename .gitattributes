@@ -1,2 +1,3 @@
 attic/* linguist-vendored
 cmake-extras/* linguist-vendored
+cmake-build-*/ linguist-vendored

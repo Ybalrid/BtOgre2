@@ -23,14 +23,13 @@ Vector3 Convert::toOgre(const btVector3& v)
 	return { v.x(), v.y(), v.z() };
 }
 
-LineDrawer::LineDrawer(SceneNode* node, String datablockId, String smgrName) :
-	sceneManagerName(smgrName),
+LineDrawer::LineDrawer(SceneNode* node, String datablockId, SceneManager* smgr) :
+	smgr(smgr),
 	attachNode(node),
 	datablockToUse(datablockId),
 	manualObject(nullptr),
 	index(0)
 {
-	smgr = Root::getSingleton().getSceneManager(sceneManagerName);
 }
 
 LineDrawer::~LineDrawer()
@@ -99,7 +98,28 @@ DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, String smgrNam
 	unlitDiffuseMultiplier(1),
 	stepped(false),
 	scene(smgrName),
-	drawer(mNode, unlitDatablockName, scene)
+	smgr(Ogre::Root::getSingleton().getSceneManager(smgrName)),
+	drawer(mNode, unlitDatablockName, smgr)
+{
+	init();
+}
+
+DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, SceneManager* smgr) :
+	mNode(node->createChildSceneNode(SCENE_STATIC)),
+	mWorld(world),
+	mDebugOn(true),
+	unlitDatablockId(unlitDatablockName),
+	unlitDiffuseMultiplier(1),
+	stepped(false),
+	scene("nonamegiven"),
+	smgr(smgr),
+	drawer(mNode, unlitDatablockName, smgr)
+{
+	init();
+}
+
+
+void DebugDrawer::init()
 {
 	if (!ResourceGroupManager::getSingleton().resourceGroupExists(BtOgre21ResourceGroup))
 		ResourceGroupManager::getSingleton().createResourceGroup(BtOgre21ResourceGroup);

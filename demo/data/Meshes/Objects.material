@@ -1,0 +1,5 @@
+hlms Player/TEXFACE/Player.png pbs
+{
+    diffuse 0.8 0.8 0.8
+    diffuse_map  Player.png
+}

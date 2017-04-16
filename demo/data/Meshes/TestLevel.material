@@ -1,0 +1,8 @@
+hlms TestLevel_b0_m0/TEXFACE/Grass.jpg pbs
+{
+    diffuse_map  Grass.jpg
+}
+hlms TestLevel_b0_m0/TEXFACE/Soil.jpg pbs
+{
+	diffuse_map Soil.jpg
+}
