@@ -272,6 +272,7 @@ protected:
 		//All resources initialized
 		resourceGroupManager->initialiseAllResourceGroups();
 
+		//Create a scene manager
 		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, INSTANCING_CULLING_THREADED, "MAIN_SMGR");
 
 		mCamera = mSceneMgr->createCamera("MyCamera");
@@ -279,6 +280,7 @@ protected:
 
 		createScene();
 
+		//Create a basic compositor
 		auto compositorManager = mRoot->getCompositorManager2();
 		IdString mainWorkspace{ "MainWorkspace" };
 		if (!compositorManager->hasWorkspaceDefinition(mainWorkspace))
@@ -286,27 +288,29 @@ protected:
 		compositorManager->addWorkspace(mSceneMgr, mWindow, mCamera, mainWorkspace, true);
 	}
 
+	///Render a frame 
 	void frame()
 	{
 		WindowEventUtilities::messagePump();
 
 		if (mWindow->isClosed())
-			running = false;
-		else
 		{
-			milliLast = milliNow;
-			milliNow = mRoot->getTimer()->getMilliseconds();
-
-			phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
-			dbgdraw->step();
-
-			mRoot->renderOneFrame();
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			running = false;
+			return;
 		}
-	}
-public:
+			
+		milliLast = milliNow;
+		milliNow = mRoot->getTimer()->getMilliseconds();
 
+		phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
+		dbgdraw->step();
+
+		mRoot->renderOneFrame();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+
+public:
 	void go()
 	{
 		setup();
