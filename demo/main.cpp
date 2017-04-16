@@ -187,7 +187,7 @@ protected:
 		// Debug drawing!
 		//----------------------------------------------------------
 		
-		dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld };
+		dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld, mSceneMgr};
 		phyWorld->setDebugDrawer(dbgdraw);
 
 		//----------------------------------------------------------

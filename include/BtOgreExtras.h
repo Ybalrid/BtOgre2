@@ -84,7 +84,7 @@ namespace BtOgre
 
 	public:
 		///Construct the line drawer, need the name of the scene manager and the datablock (material)
-		LineDrawer(Ogre::SceneNode* node, Ogre::String datablockId, Ogre::String smgrName);
+		LineDrawer(Ogre::SceneNode* node, Ogre::String datablockId, Ogre::SceneManager* smgrName);
 
 		///Desstroy the line drawer
 		~LineDrawer();
@@ -133,16 +133,30 @@ namespace BtOgre
 		///The LineDrawer : Object that draw lines.
 		LineDrawer drawer;
 
+		///Pointer to the SceneManager
+		Ogre::SceneManager* smgr;
+
+	private:
+
+		///Initialization code that has to be called by all overload of the constructor
+		void init();
 	public:
 
 		///Name of the resource group to be used by the debug drawer when creating materials (datablocks)
 		static constexpr const char* BtOgre21ResourceGroup{ "BtOgre21" };
 
-		///Debug drawer of Bullet.
+		///Debug drawer for Bullet.
 		/// \param node SceneNode (usually the Root node) where the lines will be attached. A static child node will be created
 		/// \param world Pointer to the btDynamicsWolrd you're using
 		/// \param smgrName Name of the scene manager you are using
 		DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, Ogre::String smgrName = "MAIN_SMGR");
+
+		///Debug drawer for Bullet
+		/// \param node SceneNode (usually the Root node) where the lines will be attached. A static child node will be created
+		/// \param world Pointer to the btDynamicsWolrd you're using
+		/// \param smgr Pointer to the SceneManager to use
+		DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, Ogre::SceneManager* smgr);
+
 
 		///Default polymorphic destructor
 		virtual ~DebugDrawer() = default;
