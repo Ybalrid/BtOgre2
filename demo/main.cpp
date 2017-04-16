@@ -29,21 +29,9 @@
 
 using namespace Ogre;
 
-/*
- * =====================================================================================
- *    Namespace:  Globals
- *  Description:  A dirty 'globals' hack.
- * =====================================================================================
- */
-
-namespace Globals
-{
-	btDynamicsWorld *phyWorld;
-	BtOgre::DebugDrawer *dbgdraw;
-}
 
 /*
- * =====================================================================================
+ * ===================================j==================================================
  *        Class:  BtOgreTestApplication
  *  Description:  Derives from ExampleApplication and overrides stuff.
  * =====================================================================================
@@ -54,6 +42,9 @@ namespace Globals
 class BtOgreTestApplication
 {
 protected:
+
+	btDynamicsWorld* phyWorld;
+	BtOgre::DebugDrawer* dbgdraw;
 	btAxisSweep3 *mBroadphase;
 	btDefaultCollisionConfiguration *mCollisionConfig;
 	btCollisionDispatcher *mDispatcher;
@@ -93,27 +84,27 @@ public:
 		mDispatcher = new btCollisionDispatcher(mCollisionConfig);
 		mSolver = new btSequentialImpulseConstraintSolver();
 
-		Globals::phyWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mCollisionConfig);
-		Globals::phyWorld->setGravity(btVector3(0, -9.8, 0));
+		phyWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mCollisionConfig);
+		phyWorld->setGravity(btVector3(0, -9.8, 0));
 	}
 
 	~BtOgreTestApplication()
 	{
 		//Free rigid bodies
-		Globals::phyWorld->removeRigidBody(mNinjaBody);
+		phyWorld->removeRigidBody(mNinjaBody);
 		delete mNinjaBody->getMotionState();
 		delete mNinjaBody;
 		delete mNinjaShape;
 
-		Globals::phyWorld->removeRigidBody(mGroundBody);
+		phyWorld->removeRigidBody(mGroundBody);
 		delete mGroundBody->getMotionState();
 		delete mGroundBody;
 		delete mGroundShape->getMeshInterface();
 		delete mGroundShape;
 
 		//Free Bullet stuff.
-		delete Globals::dbgdraw;
-		delete Globals::phyWorld;
+		delete dbgdraw;
+		delete phyWorld;
 
 		delete mSolver;
 		delete mDispatcher;
@@ -195,9 +186,9 @@ protected:
 		//----------------------------------------------------------
 		// Debug drawing!
 		//----------------------------------------------------------
-
-		Globals::dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), Globals::phyWorld };
-		Globals::phyWorld->setDebugDrawer(Globals::dbgdraw);
+		
+		dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld };
+		phyWorld->setDebugDrawer(dbgdraw);
 
 		//----------------------------------------------------------
 		// Ninja!
@@ -230,7 +221,7 @@ protected:
 
 		//Create the Body.
 		mNinjaBody = new btRigidBody(mass, ninjaState, mNinjaShape, inertia);
-		Globals::phyWorld->addRigidBody(mNinjaBody);
+		phyWorld->addRigidBody(mNinjaBody);
 
 		//----------------------------------------------------------
 		// Ground!
@@ -257,7 +248,7 @@ protected:
 
 		//Create the Body.
 		mGroundBody = new btRigidBody(0, groundState, mGroundShape, btVector3(0, 0, 0));
-		Globals::phyWorld->addRigidBody(mGroundBody);
+		phyWorld->addRigidBody(mGroundBody);
 	}
 
 	void setup()
@@ -306,8 +297,8 @@ protected:
 			milliLast = milliNow;
 			milliNow = mRoot->getTimer()->getMilliseconds();
 
-			Globals::phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
-			Globals::dbgdraw->step();
+			phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
+			dbgdraw->step();
 
 			mRoot->renderOneFrame();
 
@@ -323,8 +314,6 @@ public:
 		{
 			frame();
 		}
-
-		LogManager::getSingleton().logMessage("Not rendering anymore!");
 	}
 };
 
