@@ -40,3 +40,6 @@ libBtOgre21.a
 libBtOgre21_d.a
 BtOgre21.lib
 BtOgre21_d.a
+
+#vim swp
+.*.swp

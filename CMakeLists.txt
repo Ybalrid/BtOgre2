@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.0)
 
 project(BtOgre21)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake-extras/)
 
 if(MSVC)
