@@ -270,7 +270,7 @@ protected:
 		declareHlmsLibrary("HLMS");
 
 		//All resources initialized
-		resourceGroupManager->initialiseAllResourceGroups();
+		resourceGroupManager->initialiseAllResourceGroups(false);
 
 		//Create a scene manager
 		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, INSTANCING_CULLING_THREADED, "MAIN_SMGR");

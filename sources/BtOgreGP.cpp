@@ -520,7 +520,7 @@ void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transf
 	getV2MeshBufferSize(mesh, prevVertexSize, prevIndexSize);
 
 	//The number to offset the index values. When switching submeshes, we want to append the indexes when reconstructing the full thing.
-	auto indexOffset{ mIndexBuffer.empty() ? 0U : mIndexBuffer[mIndexBuffer.size() - 1] };
+	auto indexOffset = mIndexBuffer.empty() ? 0U : mIndexBuffer[mIndexBuffer.size() - 1];
 
 	//The offset associated with the current submesh
 	size_t subMeshOffset = 0U;
