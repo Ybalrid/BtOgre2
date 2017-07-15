@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 2.8.0)
+cmake_minimum_required(VERSION 3.1)
 
 project(BtOgre21DEMO)
 
 #Use the cmake-extra from the BtOgre directory, and the findBtOgre from the BtOgre directory too 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake-extras/ ${PROJECT_SOURCE_DIR}/../CMake)
+
+set(CMAKE_CXX_STANDARD 11)
 
 #Need the physics engine
 find_package(Bullet REQUIRED)
