@@ -157,13 +157,26 @@ protected:
 		//Define the shader library to use for HLMS
 		auto library = ArchiveVec{};
 		auto archiveLibrary = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Common/" + SL, "FileSystem", true);
+		auto archiveLibraryAny = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Common/Any", "FileSystem", true);
 		library.push_back(archiveLibrary);
+		library.push_back(archiveLibraryAny);
+
+		//Common unlit and pbs libraries
+		auto archiveUnlitAny = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Unlit/Any", "FileSystem", true);
+		auto archivePbsUnlit = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Pbs/Any", "FileSystem", true);
 
 		//Define "unlit" and "PBS" (physics based shader) HLMS
 		auto archiveUnlit = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Unlit/" + SL, "FileSystem", true);
 		auto archivePbs = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Pbs/" + SL, "FileSystem", true);
+
+		library.push_back(archiveUnlitAny);
 		auto hlmsUnlit = OGRE_NEW HlmsUnlit{ archiveUnlit, &library };
+		
+		library.pop_back();
+		
+		library.push_back(archivePbsUnlit);
 		auto hlmsPbs = OGRE_NEW HlmsPbs{ archivePbs, &library };
+
 		hlmsManager->registerHlms(hlmsUnlit);
 		hlmsManager->registerHlms(hlmsPbs);
 	}
