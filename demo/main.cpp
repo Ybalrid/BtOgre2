@@ -145,40 +145,46 @@ protected:
 		if (std::string(SL) != "GLSL" || std::string(Ogre::Root::getSingleton().getRenderSystem()->getName()) != "OpenGL 3+ Rendering Subsystem")
 			throw std::runtime_error("This function is OpenGL only. Please use the RenderSytem_GL3+ in the Ogre configuration!");
 #endif
-		auto hlmsFolder = path;
+		auto dataFolder = path;
 
-		//The hlmsFolder can come from a configuration file where it could be "empty" or set to "." or lacking the trailing "/"
-		if (hlmsFolder.empty()) hlmsFolder = "./";
-		else if (hlmsFolder[hlmsFolder.size() - 1] != '/') hlmsFolder += "/";
+		if (dataFolder.empty()) dataFolder = "./";
+		else if (dataFolder[dataFolder.size() - 1] != '/') dataFolder += '/';
 
-		//Get the hlmsManager (not a singleton by itself, but accessible via Root)
-		auto hlmsManager = Root::getSingleton().getHlmsManager();
+		//For retrieval of the paths to the different folders needed
+		String dataFolderPath;
+		StringVector libraryFoldersPaths;
 
-		//Define the shader library to use for HLMS
-		auto library = ArchiveVec{};
-		auto archiveLibrary = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Common/" + SL, "FileSystem", true);
-		auto archiveLibraryAny = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Common/Any", "FileSystem", true);
-		library.push_back(archiveLibrary);
-		library.push_back(archiveLibraryAny);
+		//Get the path to all the subdirectories used by HlmsUnlit
+		HlmsUnlit::getDefaultPaths(dataFolderPath, libraryFoldersPaths);
 
-		//Common unlit and pbs libraries
-		auto archiveUnlitAny = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Unlit/Any", "FileSystem", true);
-		auto archivePbsUnlit = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Pbs/Any", "FileSystem", true);
+		//Create the Ogre::Archive objects needed
+		Archive* archiveUnlit = ArchiveManager::getSingletonPtr()->load(dataFolder + dataFolderPath, "FileSystem", true);
+		ArchiveVec archiveUnlitLibraryFolders;
+		for (const auto& libraryFolderPath : libraryFoldersPaths)
+		{
+			Archive* archiveLibrary = ArchiveManager::getSingletonPtr()->load(dataFolder + libraryFolderPath, "FileSystem", true);
+			archiveUnlitLibraryFolders.push_back(archiveLibrary);
+		}
 
-		//Define "unlit" and "PBS" (physics based shader) HLMS
-		auto archiveUnlit = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Unlit/" + SL, "FileSystem", true);
-		auto archivePbs = ArchiveManager::getSingletonPtr()->load(hlmsFolder + "Hlms/Pbs/" + SL, "FileSystem", true);
+		//Create and register the unlit Hlms
+		HlmsUnlit* hlmsUnlit = OGRE_NEW HlmsUnlit(archiveUnlit, &archiveUnlitLibraryFolders);
+		Root::getSingleton().getHlmsManager()->registerHlms(hlmsUnlit);
 
-		library.push_back(archiveUnlitAny);
-		auto hlmsUnlit = OGRE_NEW HlmsUnlit{ archiveUnlit, &library };
-		
-		library.pop_back();
-		
-		library.push_back(archivePbsUnlit);
-		auto hlmsPbs = OGRE_NEW HlmsPbs{ archivePbs, &library };
+		//Do the same for HlmsPbs:
+		HlmsPbs::getDefaultPaths(dataFolderPath, libraryFoldersPaths);
+		Archive* archivePbs = ArchiveManager::getSingletonPtr()->load(dataFolder + dataFolderPath, "FileSystem", true);
 
-		hlmsManager->registerHlms(hlmsUnlit);
-		hlmsManager->registerHlms(hlmsPbs);
+		//Get the library archive(s)
+		ArchiveVec archivePbsLibraryFolders;
+		for (const auto& libraryFolderPath : libraryFoldersPaths)
+		{
+			Archive* archiveLibrary = ArchiveManager::getSingletonPtr()->load(dataFolder + libraryFolderPath, "FileSystem", true);
+			archivePbsLibraryFolders.push_back(archiveLibrary);
+		}
+
+		//Create and register
+		HlmsPbs* hlmsPbs = OGRE_NEW HlmsPbs(archivePbs, &archivePbsLibraryFolders);
+		Root::getSingleton().getHlmsManager()->registerHlms(hlmsPbs);
 	}
 
 	void createScene()
