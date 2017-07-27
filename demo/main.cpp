@@ -29,7 +29,6 @@
 
 using namespace Ogre;
 
-
 /*
  * ===================================j==================================================
  *        Class:  BtOgreTestApplication
@@ -74,7 +73,18 @@ protected:
 	unsigned long milliNow, milliLast;
 
 public:
-	BtOgreTestApplication() :
+	BtOgreTestApplication() : dbgdraw(nullptr),
+		mNinjaNode(nullptr),
+		mNinjaItem(nullptr),
+		mNinjaBody(nullptr),
+		mNinjaShape(nullptr),
+		mGroundItem(nullptr),
+		mGroundBody(nullptr),
+		mGroundShape(nullptr),
+		mRoot(nullptr),
+		mSceneMgr(nullptr),
+		mCamera(nullptr),
+		mWindow(nullptr),
 		milliNow{ 0 },
 		milliLast{ 0 }
 	{
@@ -205,8 +215,8 @@ protected:
 		//----------------------------------------------------------
 		// Debug drawing!
 		//----------------------------------------------------------
-		
-		dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld, mSceneMgr};
+
+		dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld, mSceneMgr };
 		phyWorld->setDebugDrawer(dbgdraw);
 
 		//----------------------------------------------------------
@@ -307,7 +317,7 @@ protected:
 		compositorManager->addWorkspace(mSceneMgr, mWindow, mCamera, mainWorkspace, true);
 	}
 
-	///Render a frame 
+	///Render a frame
 	void frame()
 	{
 		WindowEventUtilities::messagePump();
@@ -317,7 +327,7 @@ protected:
 			running = false;
 			return;
 		}
-			
+
 		milliLast = milliNow;
 		milliNow = mRoot->getTimer()->getMilliseconds();
 
