@@ -106,6 +106,7 @@ namespace BtOgre
 	class DebugDrawer : public btIDebugDraw
 	{
 	protected:
+
 		///Node where the debug drawer is attached
 		Ogre::SceneNode *mNode;
 
@@ -142,6 +143,9 @@ namespace BtOgre
 		void init();
 	public:
 
+		///Write messages to the log, with a "BtOgre21" tag
+		static void logToOgre(const std::string& message);
+
 		///Name of the resource group to be used by the debug drawer when creating materials (datablocks)
 		static constexpr const char* BtOgre21ResourceGroup{ "BtOgre21" };
 
@@ -156,7 +160,6 @@ namespace BtOgre
 		/// \param world Pointer to the btDynamicsWolrd you're using
 		/// \param smgr Pointer to the SceneManager to use
 		DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, Ogre::SceneManager* smgr);
-
 
 		///Default polymorphic destructor
 		virtual ~DebugDrawer() = default;

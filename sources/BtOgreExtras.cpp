@@ -56,7 +56,7 @@ void LineDrawer::checkForMaterial() const
 	const auto datablock = hlmsUnlit->getDatablock(datablockToUse);
 
 	if (datablock) return;
-	LogManager::getSingleton().logMessage("BtOgre's datablock not found, creating...");
+	DebugDrawer::logToOgre("BtOgre's datablock not found, creating...");
 	auto createdDatablock = hlmsUnlit->createDatablock(datablockToUse, datablockToUse, {}, {}, {}, true, BLANKSTRING, DebugDrawer::BtOgre21ResourceGroup);
 
 	if (!createdDatablock) throw std::runtime_error(std::string("BtOgre Line Drawer failed to create HLMS Unlit datablock ") + datablockToUse);
@@ -66,10 +66,14 @@ void LineDrawer::update()
 {
 	if (!manualObject)
 	{
-		LogManager::getSingleton().logMessage("Create manual object");
+		DebugDrawer::logToOgre("Create manual object");
+
 		manualObject = smgr->createManualObject(SCENE_STATIC);
+		DebugDrawer::logToOgre("Set no shadows");
 		manualObject->setCastShadows(false);
+		DebugDrawer::logToOgre("Attach object to node");
 		attachNode->attachObject(manualObject);
+		DebugDrawer::logToOgre("done creating object");
 	}
 
 	checkForMaterial();
@@ -88,6 +92,11 @@ void LineDrawer::update()
 	}
 
 	manualObject->end();
+}
+
+void DebugDrawer::logToOgre(const std::string& message)
+{
+	Ogre::LogManager::getSingleton().logMessage("BtOgre21Log : " + message);
 }
 
 DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, String smgrName) :
@@ -157,7 +166,7 @@ void DebugDrawer::drawContactPoint(const btVector3& PointOnB, const btVector3& n
 
 void DebugDrawer::reportErrorWarning(const char* warningString)
 {
-	LogManager::getSingleton().logMessage(warningString);
+	logToOgre(warningString);
 }
 
 void DebugDrawer::setDebugMode(int isOn)
