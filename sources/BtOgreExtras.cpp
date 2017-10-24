@@ -24,10 +24,10 @@ Vector3 Convert::toOgre(const btVector3& v)
 }
 
 LineDrawer::LineDrawer(SceneNode* node, String datablockId, SceneManager* smgr) :
-	smgr(smgr),
 	attachNode(node),
 	datablockToUse(datablockId),
 	manualObject(nullptr),
+	smgr(smgr),
 	index(0)
 {
 }
@@ -117,7 +117,6 @@ DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, SceneManager* 
 {
 	init();
 }
-
 
 void DebugDrawer::init()
 {
