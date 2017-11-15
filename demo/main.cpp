@@ -386,9 +386,6 @@ protected:
 				running = false;
 				break;
 			case SDL_WINDOWEVENT_RESIZED:
-			case SDL_WINDOWEVENT_MOVED:
-			case SDL_WINDOWEVENT_MINIMIZED:
-			case SDL_WINDOWEVENT_MAXIMIZED:
 #ifndef _WIN32
 				mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
 #endif
