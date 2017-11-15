@@ -28,7 +28,7 @@ include_directories(
 )
 
 #Set the executable
-add_executable(BtOgre21DEMO main.cpp exampleapp/ExampleApplication.h exampleapp/ExampleFrameListener.h)
+add_executable(BtOgre21DEMO main.cpp)
 
 #Link the required libraries
 target_link_libraries(
