@@ -289,62 +289,68 @@ protected:
 		LogManager::getSingleton().setLogDetail(LL_BOREME);
 
 		mRoot->showConfigDialog();
-
-		//mWindow = mRoot->initialise(true, "BtOgre21 Demo");
+		
+		//Do not create a window with ogre yet. We're using the SDL to handle window and events:
 		mRoot->initialise(false);
 
-		int width = 1024, height = 768;
+		//Fetch configuration for the window
+		auto width = 1024, height = 768;
 		auto cfgOpts = mRoot->getRenderSystem()->getConfigOptions();
-		Ogre::ConfigOptionMap::iterator opt = cfgOpts.find("Video Mode");
+		auto opt = cfgOpts.find("Video Mode");
 		if (opt != cfgOpts.end())
 		{
 			//Ignore leading space
-			const Ogre::String::size_type start = opt->second.currentValue.find_first_of("012356789");
+			const auto start = opt->second.currentValue.find_first_of("012356789");
 			//Get the width and height
-			Ogre::String::size_type widthEnd = opt->second.currentValue.find(' ', start);
+			auto widthEnd = opt->second.currentValue.find(' ', start);
 			// we know that the height starts 3 characters after the width and goes until the next space
-			Ogre::String::size_type heightEnd = opt->second.currentValue.find(' ', widthEnd + 3);
+			auto heightEnd = opt->second.currentValue.find(' ', widthEnd + 3);
 			// Now we can parse out the values
-			width = Ogre::StringConverter::parseInt(opt->second.currentValue.substr(0, widthEnd));
-			height = Ogre::StringConverter::parseInt(opt->second.currentValue.substr(
+			width = StringConverter::parseInt(opt->second.currentValue.substr(0, widthEnd));
+			height = StringConverter::parseInt(opt->second.currentValue.substr(
 				widthEnd + 3, heightEnd));
 		}
-		bool fullscreen = Ogre::StringConverter::parseBool(cfgOpts["Full Screen"].currentValue);
+		auto fullscreen = StringConverter::parseBool(cfgOpts["Full Screen"].currentValue);
 
+		//Create an SDL window
 		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
+
+		//Get access to native (os/window manager dependent) window information
 		SDL_SysWMinfo wmInfo;
 		SDL_VERSION(&wmInfo.version);
-
 		SDL_GetWindowWMInfo(mSDLWindow, &wmInfo);
-		std::string winHandle;
 
+		//Retreive window handle
+		std::string winHandle;
 		switch (wmInfo.subsystem)
 		{
 #ifdef _WIN32
 		case SDL_SYSWM_WINDOWS:
-			winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo.info.win.window);
+			winHandle = StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.win.window));
 			break;
 #else
 		case SDL_SYSWM_X11:
-			winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo.info.x11.window);
+			winHandle = Ogre::StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.x11.window));
 			break;
 #endif
 		default:
-			Ogre::LogManager::getSingleton().logMessage("Unimplemented window handle retreival");
+			LogManager::getSingleton().logMessage("Unimplemented window handle retreival");
 			throw std::runtime_error("Unimplemented window handel retreival code for current operating system!");
 			break;
 		}
 
-		Ogre::NameValuePairList params;
+		//Create the configuration parameters for initializing the Ogre::RenderWindow object
+		NameValuePairList params;
 #ifdef _WIN32
-		params.insert(std::make_pair("externalWindowHandle", winHandle));
+		params.insert(make_pair("externalWindowHandle", winHandle));
 #else
 		params.insert(std::make_pair("parentWindowHandle", winHandle));
 #endif
 		params.insert(std::make_pair("title", "BtOgre21 Demo"));
-		params.insert(std::make_pair("FSAA", cfgOpts["FSAA"].currentValue));
-		params.insert(std::make_pair("vsync", cfgOpts["vsync"].currentValue));
+		params.insert(make_pair("FSAA", cfgOpts["FSAA"].currentValue));
+		params.insert(make_pair("vsync", cfgOpts["vsync"].currentValue));
 
+		//Create the render window
 		mWindow = mRoot->createRenderWindow("BtOgre21 Demo", width, height, fullscreen, &params);
 
 		//Declare some resources
@@ -362,9 +368,11 @@ protected:
 		//Create a scene manager
 		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, INSTANCING_CULLING_THREADED, "MAIN_SMGR");
 
+		//Create the camera
 		mCamera = mSceneMgr->createCamera("MyCamera");
 		mCamera->setAutoAspectRatio(true);
 
+		//Setup the objects in the scene
 		createScene();
 
 		//Create a basic compositor
@@ -409,12 +417,15 @@ protected:
 			break;
 		}
 
+		//Get the timing for stepping physics
 		milliLast = milliNow;
 		milliNow = mRoot->getTimer()->getMilliseconds();
-
+		
+		//Step the simulation and the debug drawer
 		phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
 		dbgdraw->step();
 
+		//Render the frame
 		mRoot->renderOneFrame();
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
