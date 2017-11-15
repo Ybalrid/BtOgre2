@@ -27,14 +27,11 @@
 #include <BtOgreGP.h>
 #include <thread>
 
+#include <SDL.h>
+#include <SDL_syswm.h>
+
 using namespace Ogre;
 
-/*
- * ===================================j==================================================
- *        Class:  BtOgreTestApplication
- *  Description:  Derives from ExampleApplication and overrides stuff.
- * =====================================================================================
- */
 
 #include <fstream>
 
@@ -68,7 +65,9 @@ protected:
 	static constexpr const size_t SMGR_WORKERS{ 4 };
 
 	volatile bool running = true;
-	RenderWindow* mWindow;
+    RenderWindow* mWindow;
+    SDL_Window* mSDLWindow;
+    SDL_Event mSDLEvent;
 
 	unsigned long milliNow, milliLast;
 
@@ -88,6 +87,9 @@ public:
 		milliNow{ 0 },
 		milliLast{ 0 }
 	{
+
+        if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) throw std::runtime_error("Failed SDL_Init()");
+
 		//Bullet initialisation.
 		mBroadphase = new btAxisSweep3(btVector3(-10000, -10000, -10000), btVector3(10000, 10000, 10000), 1024);
 		mCollisionConfig = new btDefaultCollisionConfiguration();
@@ -121,7 +123,10 @@ public:
 		delete mCollisionConfig;
 		delete mBroadphase;
 
-		delete mRoot;
+        delete mRoot;
+
+        SDL_DestroyWindow(mSDLWindow);
+        SDL_Quit();
 	}
 
 protected:
@@ -287,7 +292,62 @@ protected:
 
 		mRoot->showConfigDialog();
 
-		mWindow = mRoot->initialise(true, "BtOgre21 Demo");
+		//mWindow = mRoot->initialise(true, "BtOgre21 Demo");
+        mRoot->initialise(false);
+
+        int width = 1024, height = 768;
+        auto cfgOpts = mRoot->getRenderSystem()->getConfigOptions();
+        Ogre::ConfigOptionMap::iterator opt = cfgOpts.find( "Video Mode" );
+        if( opt != cfgOpts.end() )
+        {
+            //Ignore leading space
+            const Ogre::String::size_type start = opt->second.currentValue.find_first_of("012356789");
+            //Get the width and height
+            Ogre::String::size_type widthEnd = opt->second.currentValue.find(' ', start);
+            // we know that the height starts 3 characters after the width and goes until the next space
+            Ogre::String::size_type heightEnd = opt->second.currentValue.find(' ', widthEnd+3);
+            // Now we can parse out the values
+            width   = Ogre::StringConverter::parseInt( opt->second.currentValue.substr( 0, widthEnd ) );
+            height  = Ogre::StringConverter::parseInt( opt->second.currentValue.substr(
+                                                           widthEnd+3, heightEnd ) );
+        }
+        bool fullscreen = Ogre::StringConverter::parseBool( cfgOpts["Full Screen"].currentValue );
+
+        mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
+        SDL_SysWMinfo wmInfo;
+        SDL_VERSION(&wmInfo.version);
+
+        SDL_GetWindowWMInfo(mSDLWindow, &wmInfo);
+        std::string winHandle;
+
+        switch(wmInfo.subsystem)
+        {
+#ifdef _WIN32
+            case SDL_SYSWM_WINDOWS:
+                winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo.info.win.window);
+            break;
+#else
+            case SDL_SYSWM_X11:
+                winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo.info.x11.window);
+            break;
+#endif
+        default:
+                Ogre::LogManager::getSingleton().logMessage ("Unimplemented window handle retreival");
+                throw std::runtime_error("Unimplemented window handel retreival code for current operating system!");
+            break;
+        }
+
+        Ogre::NameValuePairList params;
+#ifdef _WIN32
+        params.insert(std::make_pair("externalWindowHandle", winHandle));
+#else
+        params.insert(std::make_pair("parentWindowHandle", winHandle));
+#endif
+        params.insert(std::make_pair("title", "BtOgre21 Demo"));
+        params.insert(std::make_pair("FSAA",cfgOpts["FSAA"].currentValue));
+        params.insert(std::make_pair("vsync", cfgOpts["vsync"].currentValue));
+
+        mWindow = mRoot->createRenderWindow("BtOgre21 Demo", width, height, fullscreen, &params);
 
 		//Declare some resources
 		auto resourceGroupManager = ResourceGroupManager::getSingletonPtr();
@@ -320,13 +380,33 @@ protected:
 	///Render a frame
 	void frame()
 	{
-		WindowEventUtilities::messagePump();
-
-		if (mWindow->isClosed())
-		{
-			running = false;
-			return;
-		}
+        WindowEventUtilities::messagePump();
+        while(SDL_PollEvent(&mSDLEvent)) switch(mSDLEvent.type)
+        {
+            case SDL_WINDOWEVENT:
+            switch(mSDLEvent.window.event)
+            {
+                case SDL_WINDOWEVENT_CLOSE:
+                    running = false;
+                break;
+            case SDL_WINDOWEVENT_RESIZED:
+            case SDL_WINDOWEVENT_MOVED:
+            case SDL_WINDOWEVENT_MINIMIZED:
+            case SDL_WINDOWEVENT_MAXIMIZED:
+                mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
+                mWindow->windowMovedOrResized();
+                break;
+            }
+            break;
+        case SDL_KEYDOWN:
+            switch(mSDLEvent.key.keysym.sym)
+            {
+                case SDLK_ESCAPE:
+                running = false;
+                break;
+            }
+            break;
+        }
 
 		milliLast = milliNow;
 		milliNow = mRoot->getTimer()->getMilliseconds();
