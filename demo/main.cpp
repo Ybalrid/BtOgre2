@@ -13,65 +13,75 @@
  * =====================================================================================
  */
 
+//C++ standard library
+#include <thread>
+
+//Ogre includes
 #include <Ogre.h>
-#include <Hlms/Pbs/OgreHlmsPbs.h>
-#include <OgreHlms.h>
-#include <OgreHlmsManager.h>
 #include <OgreMesh.h>
 #include <OgreMesh2.h>
 #include <OgreMeshManager.h>
 #include <OgreMeshManager2.h>
+#include <OgreHlms.h>
+#include <OgreHlmsManager.h>
+#include <Hlms/Pbs/OgreHlmsPbs.h>
 #include <Compositor/OgreCompositorManager2.h>
 
+//BtOgre includes
 #include <BtOgre.hpp>
 #include <BtOgreGP.h>
-#include <thread>
 
+//SDL library, for windowing and input management
 #include <SDL.h>
 #include <SDL_syswm.h>
 
 using namespace Ogre;
 
-#include <fstream>
-
 class BtOgreTestApplication
 {
 protected:
-
+	//For the sake of simplicity, we are using "naked" pointer. I would recommend using std::unique_ptr<> for theses and not worrying about deleting them
+	//Bullet intialization
 	btDynamicsWorld* phyWorld;
-	BtOgre::DebugDrawer* dbgdraw;
-	btAxisSweep3 *mBroadphase;
-	btDefaultCollisionConfiguration *mCollisionConfig;
-	btCollisionDispatcher *mDispatcher;
-	btSequentialImpulseConstraintSolver *mSolver;
+	btBroadphaseInterface* mBroadphase;
+	btDefaultCollisionConfiguration* mCollisionConfig;
+	btCollisionDispatcher* mDispatcher;
+	btSequentialImpulseConstraintSolver* mSolver;
 
-	SceneNode *mNinjaNode;
-	Item *mNinjaItem;
-	btRigidBody *mNinjaBody;
-	btCollisionShape *mNinjaShape;
+	//BtOgre debug drawer object
+	BtOgre::DebugDrawer* mDebugDrawer;
 
-	Item *mGroundItem;
-	btRigidBody *mGroundBody;
-	btBvhTriangleMeshShape *mGroundShape;
+	//A physics object that is put on the scene
+	SceneNode* mNinjaNode;
+	Item* mNinjaItem;
+	btRigidBody* mNinjaBody;
+	btCollisionShape* mNinjaShape;
 
+	//The "landscape" of the scene
+	Item* mGroundItem;
+	btRigidBody* mGroundBody;
+	btCollisionShape* mGroundShape;
+
+	//Ogre important objects
 	Root* mRoot;
 	SceneManager* mSceneMgr;
-
 	Camera* mCamera;
 
-	static constexpr const char* const SL{ "GLSL" };
-	static constexpr const char* const GL3PLUS_RENDERSYSTEM{ "OpenGL 3+ Rendering Subsystem" };
+	//Copile time constants for Ogre's static configuration here
 	static constexpr const size_t SMGR_WORKERS{ 4 };
 
-	volatile bool running = true;
+	//Window management objects
+	bool running = true;
 	RenderWindow* mWindow;
 	SDL_Window* mSDLWindow;
 	SDL_Event mSDLEvent;
 
+	//To do some time keeping and step the physics simulation
 	unsigned long milliNow, milliLast;
 
 public:
-	BtOgreTestApplication() : dbgdraw(nullptr),
+	BtOgreTestApplication() :
+		mDebugDrawer(nullptr),
 		mNinjaNode(nullptr),
 		mNinjaItem(nullptr),
 		mNinjaBody(nullptr),
@@ -86,14 +96,14 @@ public:
 		milliNow{ 0 },
 		milliLast{ 0 }
 	{
+		//Initialise the SDL library
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) throw std::runtime_error("Failed SDL_Init()");
 
-		//Bullet initialisation.
-		mBroadphase = new btAxisSweep3(btVector3(-10000, -10000, -10000), btVector3(10000, 10000, 10000), 1024);
+		//Initialize the Bullet Physics engine
+		mBroadphase = new btDbvtBroadphase;
 		mCollisionConfig = new btDefaultCollisionConfiguration();
 		mDispatcher = new btCollisionDispatcher(mCollisionConfig);
 		mSolver = new btSequentialImpulseConstraintSolver();
-
 		phyWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mCollisionConfig);
 		phyWorld->setGravity(btVector3(0, -9.8, 0));
 	}
@@ -109,11 +119,13 @@ public:
 		phyWorld->removeRigidBody(mGroundBody);
 		delete mGroundBody->getMotionState();
 		delete mGroundBody;
-		delete mGroundShape->getMeshInterface();
+
+		//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
+		if(auto triangleShape = dynamic_cast<btBvhTriangleMeshShape*>(mGroundShape)) delete triangleShape->getMeshInterface();
 		delete mGroundShape;
 
 		//Free Bullet stuff.
-		delete dbgdraw;
+		delete mDebugDrawer;
 		delete phyWorld;
 
 		delete mSolver;
@@ -121,8 +133,10 @@ public:
 		delete mCollisionConfig;
 		delete mBroadphase;
 
+		//Stop Ogre
 		delete mRoot;
 
+		//Stop and cleanup SDL
 		SDL_DestroyWindow(mSDLWindow);
 		SDL_Quit();
 	}
@@ -154,12 +168,8 @@ protected:
 
 	void declareHlmsLibrary(const String&& path)
 	{
-#ifdef _DEBUG
-		if (std::string(SL) != "GLSL" || std::string(Ogre::Root::getSingleton().getRenderSystem()->getName()) != "OpenGL 3+ Rendering Subsystem")
-			throw std::runtime_error("This function is OpenGL only. Please use the RenderSytem_GL3+ in the Ogre configuration!");
-#endif
+		//Make sure the string we got is a valid path
 		auto dataFolder = path;
-
 		if (dataFolder.empty()) dataFolder = "./";
 		else if (dataFolder[dataFolder.size() - 1] != '/') dataFolder += '/';
 
@@ -202,40 +212,30 @@ protected:
 
 	void createScene()
 	{
-		//Some normal stuff.
+		//Set some ambiant lighting
 		mSceneMgr->setAmbientLight(ColourValue(0.2, 0.2, 0.2), ColourValue(0.2, 0.2, 0.2), mSceneMgr->getAmbientLightHemisphereDir());
+
+		//Set the camera position
 		mCamera->setPosition(Vector3(10, 10, 10));
 		mCamera->lookAt(Vector3::ZERO);
 		mCamera->setNearClipDistance(0.05);
-		LogManager::getSingleton().setLogDetail(LL_BOREME);
 
+		//Add a diretctional light
 		auto light = mSceneMgr->createLight();
 		auto lightNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 		lightNode->attachObject(light);
 		light->setType(Light::LT_DIRECTIONAL);
 		light->setDirection({ 0, -1, 0.25f });
 
-		//----------------------------------------------------------
-		// Debug drawing!
-		//----------------------------------------------------------
+		//Set the debug drawer
+		mDebugDrawer = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld, mSceneMgr };
+		phyWorld->setDebugDrawer(mDebugDrawer);
 
-		dbgdraw = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld, mSceneMgr };
-		phyWorld->setDebugDrawer(dbgdraw);
-
-		//----------------------------------------------------------
-		// Ninja!
-		//----------------------------------------------------------
-
+		//creat the main object
 		auto pos = Vector3{ 0, 10, 0 };
 		auto rot = Quaternion::IDENTITY;
-
-		//Create Ogre stuff.
-
-		//mNinjaEntity = mSceneMgr->createItem("ninjaEntity", "Player.mesh");
-
 		auto ninjaMesh = asV2mesh("Player.mesh");
 		mNinjaItem = mSceneMgr->createItem(ninjaMesh);
-
 		mNinjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(SCENE_DYNAMIC, pos, rot);
 		mNinjaNode->attachObject(mNinjaItem);
 
@@ -255,23 +255,11 @@ protected:
 		mNinjaBody = new btRigidBody(mass, ninjaState, mNinjaShape, inertia);
 		phyWorld->addRigidBody(mNinjaBody);
 
-		//----------------------------------------------------------
-		// Ground!
-		//----------------------------------------------------------
-
-		//Create Ogre stuff.
-		//MeshManager::getSingleton().createPlane("groundPlane", "General", Plane(Vector3::UNIT_Y, 0), 100, 100,
-		//10, 10, true, 1, 5, 5, Vector3::UNIT_Z);
-
+		//Create the ground
 		const auto groundMesh = asV2mesh("TestLevel_b0.mesh");
-
 		mGroundItem = mSceneMgr->createItem(groundMesh);
-		//mGroundEntity->setMaterialName("Examples/Rockwall");
 		mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(mGroundItem);
-
-		//Create the ground shape.
 		BtOgre::StaticMeshToShapeConverter converter2(mGroundItem);
-
 		mGroundShape = converter2.createTrimesh();
 
 		//Create MotionState (no need for BtOgre here, you can use it if you want to though).
@@ -285,9 +273,9 @@ protected:
 
 	void setup()
 	{
+		//Initialize Ogre
 		mRoot = new Root("plugins.cfg", "ogre.cfg", "Ogre.log");
 		LogManager::getSingleton().setLogDetail(LL_BOREME);
-
 		mRoot->showConfigDialog();
 		
 		//Do not create a window with ogre yet. We're using the SDL to handle window and events:
@@ -332,6 +320,7 @@ protected:
 		case SDL_SYSWM_X11:
 			winHandle = Ogre::StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.x11.window));
 			break;
+		//TODO handle wayland (and maybe mir?)
 #endif
 		default:
 			LogManager::getSingleton().logMessage("Unimplemented window handle retreival");
@@ -386,6 +375,7 @@ protected:
 	///Render a frame
 	void frame()
 	{
+		//Get and process events
 		WindowEventUtilities::messagePump();
 		while (SDL_PollEvent(&mSDLEvent)) switch (mSDLEvent.type)
 		{
@@ -423,11 +413,12 @@ protected:
 		
 		//Step the simulation and the debug drawer
 		phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
-		dbgdraw->step();
+		mDebugDrawer->step();
 
 		//Render the frame
 		mRoot->renderOneFrame();
 
+		//Sleep for a millisec to prevent 100% time usage
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
