@@ -121,7 +121,7 @@ public:
 		delete mGroundBody;
 
 		//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
-		if(auto triangleShape = dynamic_cast<btTriangleMeshShape*>(mGroundShape)) delete triangleShape->getMeshInterface();
+		delete reinterpret_cast<btTriangleMeshShape*>(mGroundShape)->getMeshInterface();
 		delete mGroundShape;
 
 		//Free Bullet stuff.
@@ -303,7 +303,8 @@ protected:
 		auto fullscreen = StringConverter::parseBool(cfgOpts["Full Screen"].currentValue);
 
 		//Create an SDL window
-		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
+		
+		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
 
 		//Get access to native (os/window manager dependent) window information
 		SDL_SysWMinfo wmInfo;
