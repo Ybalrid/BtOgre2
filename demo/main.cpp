@@ -192,6 +192,7 @@ protected:
 		//Create and register the unlit Hlms
 		HlmsUnlit* hlmsUnlit = OGRE_NEW HlmsUnlit(archiveUnlit, &archiveUnlitLibraryFolders);
 		Root::getSingleton().getHlmsManager()->registerHlms(hlmsUnlit);
+		hlmsUnlit->setDebugOutputPath(false, false);
 
 		//Do the same for HlmsPbs:
 		HlmsPbs::getDefaultPaths(dataFolderPath, libraryFoldersPaths);
@@ -208,6 +209,7 @@ protected:
 		//Create and register
 		HlmsPbs* hlmsPbs = OGRE_NEW HlmsPbs(archivePbs, &archivePbsLibraryFolders);
 		Root::getSingleton().getHlmsManager()->registerHlms(hlmsPbs);
+		hlmsPbs->setDebugOutputPath(false, false);
 	}
 
 	void createScene()
