@@ -121,7 +121,7 @@ public:
 		delete mGroundBody;
 
 		//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
-		if(auto triangleShape = dynamic_cast<btBvhTriangleMeshShape*>(mGroundShape)) delete triangleShape->getMeshInterface();
+		if(auto triangleShape = dynamic_cast<btTriangleMeshShape*>(mGroundShape)) delete triangleShape->getMeshInterface();
 		delete mGroundShape;
 
 		//Free Bullet stuff.
