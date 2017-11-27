@@ -34,6 +34,9 @@
 //SDL library, for windowing and input management
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include <SDL_events.h>
+#include <SDL_keyboard.h>
+#include <SDL_keycode.h>
 
 using namespace Ogre;
 
@@ -75,6 +78,7 @@ protected:
 	RenderWindow* mWindow;
 	SDL_Window* mSDLWindow;
 	SDL_Event mSDLEvent;
+	int physicsObjectCount = 0;
 
 	//To do some time keeping and step the physics simulation
 	unsigned long milliNow, milliLast;
@@ -98,6 +102,7 @@ public:
 	{
 		//Initialise the SDL library
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) throw std::runtime_error("Failed SDL_Init()");
+		SDL_SetRelativeMouseMode(SDL_TRUE);
 
 		//Initialize the Bullet Physics engine
 		mBroadphase = new btDbvtBroadphase;
@@ -212,6 +217,40 @@ protected:
 		hlmsPbs->setDebugOutputPath(false, false);
 	}
 
+	void createPhysicsObject()
+	{
+		//Generate a unique name to each created node by incrementing the counter.
+		std::string physicsNodeName =  "mNinjaNode_"  + std::to_string(physicsObjectCount);
+		auto pos = Vector3{ 0, 10, 0 };
+		auto rot = Quaternion::IDENTITY;
+
+		auto ninjaMesh = asV2mesh("Player.mesh",ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,std::to_string(physicsObjectCount));
+		mNinjaItem = mSceneMgr->createItem(ninjaMesh);
+
+		mNinjaItem->setName(physicsNodeName);
+		mNinjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(SCENE_DYNAMIC, pos, rot);
+		mNinjaNode->setName(physicsNodeName);
+		physicsObjectCount +=1;
+		mNinjaNode->attachObject(mNinjaItem);
+
+		//Create shape.
+		BtOgre::StaticMeshToShapeConverter converter(mNinjaItem);
+		mNinjaShape = converter.createSphere();
+
+		//Calculate inertia.
+		btScalar mass = 5;
+		btVector3 inertia;
+		mNinjaShape->calculateLocalInertia(mass, inertia);
+
+		//Create BtOgre MotionState (connects Ogre and Bullet).
+		auto ninjaState = new BtOgre::RigidBodyState(mNinjaNode);
+
+		//Create the Body.
+		mNinjaBody = new btRigidBody(mass, ninjaState, mNinjaShape, inertia);
+		phyWorld->addRigidBody(mNinjaBody);
+
+	}
+
 	void createScene()
 	{
 		//Set some ambiant lighting
@@ -233,29 +272,8 @@ protected:
 		mDebugDrawer = new BtOgre::DebugDrawer{ mSceneMgr->getRootSceneNode(), phyWorld, mSceneMgr };
 		phyWorld->setDebugDrawer(mDebugDrawer);
 
-		//creat the main object
-		auto pos = Vector3{ 0, 10, 0 };
-		auto rot = Quaternion::IDENTITY;
-		auto ninjaMesh = asV2mesh("Player.mesh");
-		mNinjaItem = mSceneMgr->createItem(ninjaMesh);
-		mNinjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(SCENE_DYNAMIC, pos, rot);
-		mNinjaNode->attachObject(mNinjaItem);
-
-		//Create shape.
-		BtOgre::StaticMeshToShapeConverter converter(mNinjaItem);
-		mNinjaShape = converter.createSphere();
-
-		//Calculate inertia.
-		btScalar mass = 5;
-		btVector3 inertia;
-		mNinjaShape->calculateLocalInertia(mass, inertia);
-
-		//Create BtOgre MotionState (connects Ogre and Bullet).
-		auto ninjaState = new BtOgre::RigidBodyState(mNinjaNode);
-
-		//Create the Body.
-		mNinjaBody = new btRigidBody(mass, ninjaState, mNinjaShape, inertia);
-		phyWorld->addRigidBody(mNinjaBody);
+		//Create a dynamic object
+		createPhysicsObject();
 
 		//Create the ground
 		const auto groundMesh = asV2mesh("TestLevel_b0.mesh");
@@ -378,6 +396,30 @@ protected:
 	///Render a frame
 	void frame()
 	{
+		Ogre::Vector3 movement_ = Ogre::Vector3::ZERO;
+		float cameraTransformSpeedFactor = 20;
+		float cameraRotateSpeedFactor = 200;
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+		if (state[SDL_SCANCODE_W]){
+			movement_.z = -1;
+		}
+		if (state[SDL_SCANCODE_A])
+		{
+			movement_.x = -1;
+		}
+		if (state[SDL_SCANCODE_S])
+		{
+			movement_.z = 1;
+		}
+		if (state[SDL_SCANCODE_D])
+		{
+			movement_.x = 1;
+		}
+
+		float yawAngle = 0;
+		float pitchAngle = 0;
+
 		//Get and process events
 		WindowEventUtilities::messagePump();
 		while (SDL_PollEvent(&mSDLEvent)) switch (mSDLEvent.type)
@@ -393,31 +435,47 @@ protected:
 				mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
 #endif
 				mWindow->windowMovedOrResized();
-
 				break;
 			}
 			break;
+
+		case SDL_MOUSEMOTION:
+			yawAngle = mSDLEvent.motion.xrel;
+			pitchAngle = mSDLEvent.motion.yrel;
+		break;
+
 		case SDL_KEYDOWN:
 			switch (mSDLEvent.key.keysym.sym)
 			{
 			case SDLK_ESCAPE:
-				running = false;
-				break;
+			  running = false;
+			  break;
+			case SDLK_SPACE:
+			  createPhysicsObject();
+			  break;
 			}
-			break;
 		}
+
+		movement_.normalise();
+		if (movement_ != Ogre::Vector3::ZERO)
+		{
+			//Move the camera in the local axis.
+			mCamera->moveRelative(movement_ / cameraTransformSpeedFactor);
+		}
+
+		//Set the new camera orientation
+		mCamera->yaw(-Ogre::Radian(yawAngle / cameraRotateSpeedFactor));
+		mCamera->pitch(Ogre::Radian(-pitchAngle / cameraRotateSpeedFactor));
 
 		//Get the timing for stepping physics
 		milliLast = milliNow;
 		milliNow = mRoot->getTimer()->getMilliseconds();
-		
+
 		//Step the simulation and the debug drawer
 		phyWorld->stepSimulation(float(milliNow - milliLast) / 1000.0f);
 		mDebugDrawer->step();
-
 		//Render the frame
 		mRoot->renderOneFrame();
-
 		//Sleep for a millisec to prevent 100% time usage
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
