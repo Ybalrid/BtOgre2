@@ -131,11 +131,11 @@ namespace BtOgre
 		///The name of the scene manager to get
 		Ogre::String scene;
 
-		///The LineDrawer : Object that draw lines.
-		LineDrawer drawer;
-
 		///Pointer to the SceneManager
 		Ogre::SceneManager* smgr;
+
+		///The LineDrawer : Object that draw lines.
+		LineDrawer drawer;
 
 	private:
 
