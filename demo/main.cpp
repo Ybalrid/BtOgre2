@@ -13,7 +13,7 @@
  * =====================================================================================
  */
 
-//C++ standard library
+ //C++ standard library
 #include <thread>
 
 //Ogre includes
@@ -45,7 +45,7 @@ class BtOgreTestApplication
 protected:
 	//For the sake of simplicity, we are using "naked" pointer. I would recommend using std::unique_ptr<> for theses and not worrying about deleting them
 	//Bullet intialization
-	btDynamicsWorld* phyWorld;
+	btDynamicsWorld * phyWorld;
 	btBroadphaseInterface* mBroadphase;
 	btDefaultCollisionConfiguration* mCollisionConfig;
 	btCollisionDispatcher* mDispatcher;
@@ -97,6 +97,7 @@ public:
 		mSceneMgr(nullptr),
 		mCamera(nullptr),
 		mWindow(nullptr),
+		mSDLWindow(nullptr),
 		milliNow{ 0 },
 		milliLast{ 0 }
 	{
@@ -220,17 +221,17 @@ protected:
 	void createPhysicsObject()
 	{
 		//Generate a unique name to each created node by incrementing the counter.
-		std::string physicsNodeName =  "mNinjaNode_"  + std::to_string(physicsObjectCount);
+		std::string physicsNodeName = "mNinjaNode_" + std::to_string(physicsObjectCount);
 		auto pos = Vector3{ 0, 10, 0 };
 		auto rot = Quaternion::IDENTITY;
 
-		auto ninjaMesh = asV2mesh("Player.mesh",ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,std::to_string(physicsObjectCount));
+		auto ninjaMesh = asV2mesh("Player.mesh", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, std::to_string(physicsObjectCount));
 		mNinjaItem = mSceneMgr->createItem(ninjaMesh);
 
 		mNinjaItem->setName(physicsNodeName);
 		mNinjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(SCENE_DYNAMIC, pos, rot);
 		mNinjaNode->setName(physicsNodeName);
-		physicsObjectCount +=1;
+		physicsObjectCount += 1;
 		mNinjaNode->attachObject(mNinjaItem);
 
 		//Create shape.
@@ -248,7 +249,6 @@ protected:
 		//Create the Body.
 		mNinjaBody = new btRigidBody(mass, ninjaState, mNinjaShape, inertia);
 		phyWorld->addRigidBody(mNinjaBody);
-
 	}
 
 	void createScene()
@@ -256,9 +256,9 @@ protected:
 		//Set some ambiant lighting
 		mSceneMgr->setAmbientLight(ColourValue(0.2, 0.2, 0.2), ColourValue(0.2, 0.2, 0.2), mSceneMgr->getAmbientLightHemisphereDir());
 
-		//Set the camera position
-		mCamera->setPosition(Vector3(10, 10, 10));
-		mCamera->lookAt(Vector3::ZERO);
+		////Set the camera position
+		//mCamera->setPosition(Vector3(10, 10, 10));
+		//mCamera->lookAt(Vector3::ZERO);
 		mCamera->setNearClipDistance(0.05);
 
 		//Add a diretctional light
@@ -297,7 +297,7 @@ protected:
 		mRoot = new Root("plugins.cfg", "ogre.cfg", "Ogre.log");
 		LogManager::getSingleton().setLogDetail(LL_BOREME);
 		mRoot->showConfigDialog();
-		
+
 		//Do not create a window with ogre yet. We're using the SDL to handle window and events:
 		mRoot->initialise(false);
 
@@ -321,7 +321,7 @@ protected:
 		auto fullscreen = StringConverter::parseBool(cfgOpts["Full Screen"].currentValue);
 
 		//Create an SDL window
-		
+
 		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
 
 		//Get access to native (os/window manager dependent) window information
@@ -341,11 +341,11 @@ protected:
 		case SDL_SYSWM_X11:
 			winHandle = Ogre::StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.x11.window));
 			break;
-		//TODO handle wayland (and maybe mir?)
+			//TODO handle wayland (and maybe mir?)
 #endif
 		default:
-			LogManager::getSingleton().logMessage("Unimplemented window handle retreival");
-			throw std::runtime_error("Unimplemented window handel retreival code for current operating system!");
+			LogManager::getSingleton().logMessage("Unimplemented window handle retreival for subsystem " + std::to_string(wmInfo.subsystem));
+			throw std::runtime_error("Unimplemented window handle retreival code for current operating system! subsystem " + std::to_string(wmInfo.subsystem));
 			break;
 		}
 
@@ -382,6 +382,9 @@ protected:
 		mCamera = mSceneMgr->createCamera("MyCamera");
 		mCamera->setAutoAspectRatio(true);
 
+		mCamera->setPosition(15, 15, 15);
+		mCamera->lookAt(0, 1, 0);
+
 		//Setup the objects in the scene
 		createScene();
 
@@ -389,33 +392,26 @@ protected:
 		auto compositorManager = mRoot->getCompositorManager2();
 		IdString mainWorkspace{ "MainWorkspace" };
 		if (!compositorManager->hasWorkspaceDefinition(mainWorkspace))
-			compositorManager->createBasicWorkspaceDef("MainWorkspace", ColourValue(1, 1, 0, 1));
+			compositorManager->createBasicWorkspaceDef("MainWorkspace", ColourValue(0.05, 0.4, 0.8, 1));
 		compositorManager->addWorkspace(mSceneMgr, mWindow, mCamera, mainWorkspace, true);
 	}
 
 	///Render a frame
 	void frame()
 	{
-		Ogre::Vector3 movement_ = Ogre::Vector3::ZERO;
+		auto movement = Vector3::ZERO;
 		float cameraTransformSpeedFactor = 20;
-		float cameraRotateSpeedFactor = 200;
-		const Uint8 *state = SDL_GetKeyboardState(NULL);
+		float cameraRotateSpeedFactor = 2000;
+		const auto state = SDL_GetKeyboardState(nullptr);
 
-		if (state[SDL_SCANCODE_W]){
-			movement_.z = -1;
-		}
+		if (state[SDL_SCANCODE_W])
+			movement.z = -1;
 		if (state[SDL_SCANCODE_A])
-		{
-			movement_.x = -1;
-		}
+			movement.x = -1;
 		if (state[SDL_SCANCODE_S])
-		{
-			movement_.z = 1;
-		}
+			movement.z = 1;
 		if (state[SDL_SCANCODE_D])
-		{
-			movement_.x = 1;
-		}
+			movement.x = 1;
 
 		float yawAngle = 0;
 		float pitchAngle = 0;
@@ -436,35 +432,43 @@ protected:
 #endif
 				mWindow->windowMovedOrResized();
 				break;
+			default:
+				break;
 			}
 			break;
 
 		case SDL_MOUSEMOTION:
+
 			yawAngle = mSDLEvent.motion.xrel;
 			pitchAngle = mSDLEvent.motion.yrel;
-		break;
+			break;
 
 		case SDL_KEYDOWN:
 			switch (mSDLEvent.key.keysym.sym)
 			{
 			case SDLK_ESCAPE:
-			  running = false;
-			  break;
+				running = false;
+				break;
 			case SDLK_SPACE:
-			  createPhysicsObject();
-			  break;
+				createPhysicsObject();
+				break;
+			default:
+				break;
 			}
+		default:
+			break;
 		}
 
-		movement_.normalise();
-		if (movement_ != Ogre::Vector3::ZERO)
+		movement.normalise();
+		if (movement != Ogre::Vector3::ZERO)
 		{
 			//Move the camera in the local axis.
-			mCamera->moveRelative(movement_ / cameraTransformSpeedFactor);
+			mCamera->moveRelative(movement / cameraTransformSpeedFactor);
 		}
 
-		//Set the new camera orientation
-		mCamera->yaw(-Ogre::Radian(yawAngle / cameraRotateSpeedFactor));
+		////Set the new camera orientation
+
+		mCamera->yaw(-Ogre::Radian(yawAngle) / cameraRotateSpeedFactor);
 		mCamera->pitch(Ogre::Radian(-pitchAngle / cameraRotateSpeedFactor));
 
 		//Get the timing for stepping physics
