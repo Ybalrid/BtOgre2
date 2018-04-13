@@ -257,8 +257,6 @@ protected:
 		mSceneMgr->setAmbientLight(ColourValue(0.2, 0.2, 0.2), ColourValue(0.2, 0.2, 0.2), mSceneMgr->getAmbientLightHemisphereDir());
 
 		////Set the camera position
-		//mCamera->setPosition(Vector3(10, 10, 10));
-		//mCamera->lookAt(Vector3::ZERO);
 		mCamera->setNearClipDistance(0.05);
 
 		//Add a diretctional light
@@ -460,16 +458,15 @@ protected:
 		}
 
 		movement.normalise();
-		if (movement != Ogre::Vector3::ZERO)
+		if (movement != Vector3::ZERO)
 		{
 			//Move the camera in the local axis.
 			mCamera->moveRelative(movement / cameraTransformSpeedFactor);
 		}
 
-		////Set the new camera orientation
-
-		mCamera->yaw(-Ogre::Radian(yawAngle) / cameraRotateSpeedFactor);
-		mCamera->pitch(Ogre::Radian(-pitchAngle / cameraRotateSpeedFactor));
+		//Set the new camera orientation
+		mCamera->yaw(-Radian(yawAngle) / cameraRotateSpeedFactor);
+		mCamera->pitch(Radian(-pitchAngle / cameraRotateSpeedFactor));
 
 		//Get the timing for stepping physics
 		milliLast = milliNow;
