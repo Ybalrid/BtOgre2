@@ -556,7 +556,7 @@ void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transf
 			indexBuffer);
 
 		//offset the index values by the number of vertex we got from that VAO
-		indexOffset += vertexBuffers[0]->getNumElements();
+		indexOffset += unsigned(vertexBuffers[0]->getNumElements());
 		appendedIndexes += indexBuffer[0].getNumElements();
 	}
 }
