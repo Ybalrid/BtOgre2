@@ -114,7 +114,7 @@ namespace BtOgre
 		btDynamicsWorld *mWorld;
 
 		///State of the debug draw : define what will be drawn
-		int mDebugOn;
+		int mDebugMode;
 
 		///Name of the datablock
 		static constexpr const char* unlitDatablockName{ "DebugLinesGenerated" };
@@ -153,7 +153,7 @@ namespace BtOgre
 		/// \param node SceneNode (usually the Root node) where the lines will be attached. A static child node will be created
 		/// \param world Pointer to the btDynamicsWolrd you're using
 		/// \param smgrName Name of the scene manager you are using
-		DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, Ogre::String smgrName = "MAIN_SMGR");
+		DebugDrawer(Ogre::SceneNode* node, btDynamicsWorld* world, const Ogre::String& smgrName = "MAIN_SMGR");
 
 		///Debug drawer for Bullet
 		/// \param node SceneNode (usually the Root node) where the lines will be attached. A static child node will be created

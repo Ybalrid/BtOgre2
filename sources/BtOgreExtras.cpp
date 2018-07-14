@@ -1,4 +1,5 @@
 #include "BtOgreExtras.h"
+#include <utility>
 
 using namespace Ogre;
 using namespace BtOgre;
@@ -25,7 +26,7 @@ Vector3 Convert::toOgre(const btVector3& v)
 
 LineDrawer::LineDrawer(SceneNode* node, String datablockId, SceneManager* smgr) :
 	attachNode(node),
-	datablockToUse(datablockId),
+	datablockToUse(std::move(datablockId)),
 	manualObject(nullptr),
 	smgr(smgr),
 	index(0)
@@ -52,12 +53,15 @@ void LineDrawer::addLine(const Vector3& start, const Vector3& end, const ColourV
 
 void LineDrawer::checkForMaterial() const
 {
-	const auto hlmsUnlit = static_cast<HlmsUnlit*>(Root::getSingleton().getHlmsManager()->getHlms(HLMS_UNLIT));
+	const auto hlmsUnlit = dynamic_cast<HlmsUnlit*>(Root::getSingleton().getHlmsManager()->getHlms(HLMS_UNLIT));
+	if (!hlmsUnlit)
+		throw std::runtime_error("HlmsUnlit not loaded. The debug drawer needs HlmsUnlit to draw unlit shapes");
+
 	const auto datablock = hlmsUnlit->getDatablock(datablockToUse);
 
 	if (datablock) return;
 	DebugDrawer::logToOgre("BtOgre's datablock not found, creating...");
-	auto createdDatablock = hlmsUnlit->createDatablock(datablockToUse, datablockToUse, {}, {}, {}, true, BLANKSTRING, DebugDrawer::BtOgre21ResourceGroup);
+	const auto createdDatablock = hlmsUnlit->createDatablock(datablockToUse, datablockToUse, {}, {}, {}, true, BLANKSTRING, DebugDrawer::BtOgre21ResourceGroup);
 
 	if (!createdDatablock) throw std::runtime_error(std::string("BtOgre Line Drawer failed to create HLMS Unlit datablock ") + datablockToUse);
 }
@@ -99,10 +103,10 @@ void DebugDrawer::logToOgre(const std::string& message)
 	Ogre::LogManager::getSingleton().logMessage("BtOgre21Log : " + message);
 }
 
-DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, String smgrName) :
+DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, const String& smgrName) :
 	mNode(node->createChildSceneNode(SCENE_STATIC)),
 	mWorld(world),
-	mDebugOn(true),
+	mDebugMode(true),
 	unlitDatablockId(unlitDatablockName),
 	unlitDiffuseMultiplier(1),
 	stepped(false),
@@ -116,7 +120,7 @@ DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, String smgrNam
 DebugDrawer::DebugDrawer(SceneNode* node, btDynamicsWorld* world, SceneManager* smgr) :
 	mNode(node->createChildSceneNode(SCENE_STATIC)),
 	mWorld(world),
-	mDebugOn(true),
+	mDebugMode(true),
 	unlitDatablockId(unlitDatablockName),
 	unlitDiffuseMultiplier(1),
 	stepped(false),
@@ -157,10 +161,12 @@ void DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btV
 
 void DebugDrawer::draw3dText(const btVector3& location, const char* textString)
 {
+	//TODO maybe, actually, you know, render text somewhere?
 }
 
 void DebugDrawer::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color)
 {
+	(void)lifeTime;
 	drawLine(PointOnB, PointOnB + normalOnB * distance * 20, color);
 }
 
@@ -169,22 +175,22 @@ void DebugDrawer::reportErrorWarning(const char* warningString)
 	logToOgre(warningString);
 }
 
-void DebugDrawer::setDebugMode(int isOn)
+void DebugDrawer::setDebugMode(int mode)
 {
-	mDebugOn = isOn;
+	mDebugMode = mode;
 
-	if (!mDebugOn)
+	if (!mDebugMode)
 		drawer.clear();
 }
 
 int DebugDrawer::getDebugMode() const
 {
-	return mDebugOn;
+	return mDebugMode;
 }
 
 void DebugDrawer::step()
 {
-	if (mDebugOn)
+	if (mDebugMode)
 	{
 		mWorld->debugDrawWorld();
 		drawer.update();
