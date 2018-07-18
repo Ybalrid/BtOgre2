@@ -5,14 +5,14 @@
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
-#ifndef BTOGRE_NO_VERBOSE_CHECK
+#ifdef BTOGRE_VERBOSE_CHECK
 #pragma message ("You are using OGRE " STR(OGRE_VERSION_MAJOR) "." STR(OGRE_VERSION_MINOR) " " OGRE_VERSION_NAME)
 #endif
 
 #if (OGRE_VERSION_MAJOR >= 2 && OGRE_VERSION_MINOR >= 1)
-#ifndef BTOGRE_NO_VERBOSE_CHECK
+#ifdef BTOGRE_VERBOSE_CHECK
 #pragma message ("Your version of Ogre is compatible")
-#define BTOGRE_NO_VERBOSE_CHECK
+#undef BTOGRE_VERBOSE_CHECK
 #endif
 #else
 #error "Ogre 2.1 or later required!"
