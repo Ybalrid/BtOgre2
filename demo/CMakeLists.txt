@@ -33,11 +33,11 @@ add_executable(BtOgre21DEMO main.cpp)
 #Link the required libraries
 target_link_libraries(
         BtOgre21DEMO
+        ${BtOgre21_LIBRARIES}
         ${BULLET_LIBRARIES}
         ${OGRE_LIBRARIES}
         ${OGRE_HlmsPbs_LIBRARIES}
         ${OGRE_HlmsUnlit_LIBRARIES}
-        ${BtOgre21_LIBRARIES}
         ${SDL2_LIBRARY}
 
 )
