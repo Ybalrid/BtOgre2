@@ -1,4 +1,4 @@
-# BtOgre21 - Simple Bullet-Ogre 2.1 connection
+# BtOgre2 - Simple Bullet-Ogre 2.x connection
 
 
 Master branch on AppVeyor : [![Build status](https://ci.appveyor.com/api/projects/status/imiecnoy3xuk71yw/branch/master?svg=true)](https://ci.appveyor.com/project/Ybalrid/btogre21/branch/master)
