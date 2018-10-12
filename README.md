@@ -4,7 +4,7 @@
 Master branch on AppVeyor : [![Build status](https://ci.appveyor.com/api/projects/status/imiecnoy3xuk71yw/branch/master?svg=true)](https://ci.appveyor.com/project/Ybalrid/btogre21/branch/master)
 
 
-BtOgre21 is a simple Bullet <-> Ogre connection made for Ogre 2.1 and up
+BtOgre2 is a simple Bullet <-> Ogre connection made for Ogre 2.1 and up
 
 This project is Free and Open Source, licensed under the term of the zLib license agreement (see LICENSE for more informations).
 
@@ -40,9 +40,10 @@ The goal is to reorganise the source code of this project, and also do some clea
 
 ## Changes made from the original verison of BtOgre
 
- - Modified to compile against Ogre 2.1
+ - Modified to compile against Ogre 2.1, (and will work with upcomming versions)
+ - Modernized the array location 
  - Added an overload to construct a static shape converter from an Ogre::v1::MeshPtr
- - Motion states moves "derivated coordinates" instead of the "regular" ones. This prevent unsynchronising graphics and physics if you are doing weird object parenting stuff (in case of physics objects, You probably shouldn't)
+ - Motion states moves "derivated coordinates" instead of the "regular" ones. This prevent unsynchronising graphics and physics when you have object parenting
  - The static *mesh to shape converter* has overload to use v2 meshes and Items, instead of just v1 meshes or Entity object
  - Class implementation are not in headers
  - Debug drawer re-implemented for Ogre V2 by using a v2 manual object
