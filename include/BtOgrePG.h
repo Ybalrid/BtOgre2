@@ -40,7 +40,7 @@ namespace BtOgre
 
 	public:
 
-		///Create ea rigid body state with a specified transform and offset
+		///Create a rigid body state with a specified transform and offset
 		RigidBodyState(Ogre::SceneNode* node, const btTransform& transform, const btTransform& offset = btTransform::getIdentity());
 
 		///Create a simple rigid body state
@@ -56,6 +56,9 @@ namespace BtOgre
 
 		///Set the node used by this rigid body state
 		void setNode(Ogre::SceneNode* node);
+
+		///set offset
+		void setOffset(const Ogre::Vector3& offset);
 	};
 
 	//Softbody-Ogre connection goes here!
