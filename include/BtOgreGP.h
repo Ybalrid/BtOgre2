@@ -59,6 +59,9 @@ namespace BtOgre
 		///Get the object bounding size vector
 		Ogre::Vector3 getSize();
 
+		///Get the offset of object bounding box center from (0,0,0) point in mesh
+		Ogre::Vector3 getCenterOffset();
+
 		///Return a spherical bullet collision shape from this object
 		btSphereShape* createSphere();
 
@@ -153,6 +156,9 @@ namespace BtOgre
 
 		///Bounds of the object as a AABB min/max box
 		Ogre::Vector3	mBounds;
+		
+		///Offset of AABB center from (0,0,0) point in mesh
+		Ogre::Vector3	mCenter;
 
 		///Radius of a sphere that cointains the object bouns
 		Ogre::Real		mBoundRadius;

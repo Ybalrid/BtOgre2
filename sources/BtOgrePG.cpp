@@ -47,3 +47,8 @@ void RigidBodyState::setNode(SceneNode* node)
 {
 	mNode = node;
 }
+
+void RigidBodyState::setOffset(const Ogre::Vector3& offset)
+{
+	mCenterOfMassOffset.setOrigin(Convert::toBullet(offset));
+}

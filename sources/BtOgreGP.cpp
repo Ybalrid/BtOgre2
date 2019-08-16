@@ -146,6 +146,12 @@ Real VertexIndexToShape::getRadius()
 	return mBoundRadius;
 }
 
+Vector3 VertexIndexToShape::getCenterOffset()
+{
+	getSize();
+	return mCenter;
+}
+
 Vector3 VertexIndexToShape::getSize()
 {
 	if (mBounds == Vector3(-1, -1, -1) && getVertexCount())
@@ -164,6 +170,7 @@ Vector3 VertexIndexToShape::getSize()
 		}
 
 		mBounds = vmax - vmin;
+		mCenter = vmin + mBounds/2;
 	}
 
 	return mBounds;
