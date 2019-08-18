@@ -13,8 +13,8 @@ RigidBodyState::RigidBodyState(SceneNode* node, const btTransform& transform, co
 RigidBodyState::RigidBodyState(SceneNode* node) :
 	mTransform
 	(
-		node ? Convert::toBullet(node->getOrientation()) : btQuaternion(0, 0, 0, 1),
-		node ? Convert::toBullet(node->getPosition()) : btVector3(0, 0, 0)
+		node ? Convert::toBullet(node->_getDerivedOrientationUpdated()) : btQuaternion(0, 0, 0, 1),
+		node ? Convert::toBullet(node->_getDerivedPositionUpdated()) : btVector3(0, 0, 0)
 	),
 	mCenterOfMassOffset(btTransform::getIdentity()),
 	mNode(node)
