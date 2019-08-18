@@ -26,6 +26,11 @@ void RigidBodyState::getWorldTransform(btTransform& ret) const
 	ret = mTransform;
 }
 
+void RigidBodyState::setWorldTransformNoUpdate(const btTransform& in)
+{
+	mTransform = in;
+}
+
 void RigidBodyState::setWorldTransform(const btTransform& in)
 {
 	if (!mNode) return;
