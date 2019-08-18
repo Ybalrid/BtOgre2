@@ -52,3 +52,13 @@ void RigidBodyState::setOffset(const Ogre::Vector3& offset)
 {
 	mCenterOfMassOffset.setOrigin(Convert::toBullet(offset));
 }
+
+void RigidBodyState::setOffset(const btVector3& offset)
+{
+	mCenterOfMassOffset.setOrigin(offset);
+}
+
+btVector3 RigidBodyState::getOffset() const
+{
+	return mCenterOfMassOffset.getOrigin();
+}

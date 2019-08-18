@@ -59,6 +59,12 @@ namespace BtOgre
 
 		///set offset
 		void setOffset(const Ogre::Vector3& offset);
+		
+		///set offset
+		void setOffset(const btVector3& offset);
+		
+		///set offset
+		btVector3 getOffset() const;
 	};
 
 	//Softbody-Ogre connection goes here!
