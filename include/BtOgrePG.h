@@ -54,11 +54,20 @@ namespace BtOgre
 		/// \param in : The transform to use. Will change the derivated position in world, not the one relative to the parnet node
 		void setWorldTransform(const btTransform& in) override;
 
+		///Set the world transform without updating Ogre world
+		void setWorldTransformNoUpdate(const btTransform& in);
+
 		///Set the node used by this rigid body state
 		void setNode(Ogre::SceneNode* node);
 
 		///set offset
 		void setOffset(const Ogre::Vector3& offset);
+		
+		///set offset
+		void setOffset(const btVector3& offset);
+		
+		///set offset
+		btVector3 getOffset() const;
 	};
 
 	//Softbody-Ogre connection goes here!

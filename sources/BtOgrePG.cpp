@@ -13,8 +13,8 @@ RigidBodyState::RigidBodyState(SceneNode* node, const btTransform& transform, co
 RigidBodyState::RigidBodyState(SceneNode* node) :
 	mTransform
 	(
-		node ? Convert::toBullet(node->getOrientation()) : btQuaternion(0, 0, 0, 1),
-		node ? Convert::toBullet(node->getPosition()) : btVector3(0, 0, 0)
+		node ? Convert::toBullet(node->_getDerivedOrientationUpdated()) : btQuaternion(0, 0, 0, 1),
+		node ? Convert::toBullet(node->_getDerivedPositionUpdated()) : btVector3(0, 0, 0)
 	),
 	mCenterOfMassOffset(btTransform::getIdentity()),
 	mNode(node)
@@ -24,6 +24,11 @@ RigidBodyState::RigidBodyState(SceneNode* node) :
 void RigidBodyState::getWorldTransform(btTransform& ret) const
 {
 	ret = mTransform;
+}
+
+void RigidBodyState::setWorldTransformNoUpdate(const btTransform& in)
+{
+	mTransform = in;
 }
 
 void RigidBodyState::setWorldTransform(const btTransform& in)
@@ -51,4 +56,14 @@ void RigidBodyState::setNode(SceneNode* node)
 void RigidBodyState::setOffset(const Ogre::Vector3& offset)
 {
 	mCenterOfMassOffset.setOrigin(Convert::toBullet(offset));
+}
+
+void RigidBodyState::setOffset(const btVector3& offset)
+{
+	mCenterOfMassOffset.setOrigin(offset);
+}
+
+btVector3 RigidBodyState::getOffset() const
+{
+	return mCenterOfMassOffset.getOrigin();
 }
