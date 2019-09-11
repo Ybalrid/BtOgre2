@@ -19,6 +19,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include/
     ${BULLET_INCLUDE_DIRS}
     ${OGRE_INCLUDE_DIRS}
+    ${OGRE_INCLUDE_DIR}/Hlms/Common
 )
 
 if(NOT CMAKE_DEBUG_POSTFIX)
