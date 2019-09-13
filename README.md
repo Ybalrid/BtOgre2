@@ -7,7 +7,7 @@ This project is Free and Open Source, licensed under the term of the zLib licens
 
 ## Build and usage instructions
 
-### Building BtOgre21
+### Building BtOgre2
 
 You will need CMake to build the library. and at least a C++11 complient compiler.
 
@@ -23,9 +23,9 @@ Then you'll be able to use your favorite compiler and toolchain to build this pr
 
 Then you can build and install (e.g. `make; sudo make install`) the library.
 
-### Using BtOgre21
+### Using BtOgre2
 
-In /CMake/ you will find a CMake module that will permit you to "try" to find an installed version of BtOgre21. You can help it by defining the CMake Cache variable `BtOgre21_ROOT` with the PATH to your BtOgre21 installation.
+In /CMake/ you will find a CMake module that will permit you to "try" to find an installed version of BtOgre2. You can help it by defining the CMake Cache variable `BtOgre21_ROOT` with the PATH to your BtOgre2 installation.
 
 This will populate the usual variables for libraries with CMake. See the /demo/ directory for an example on how to use it.
 
