@@ -45,3 +45,7 @@ BtOgre21_d.a
 
 #vim swp
 .*.swp
+
+# Emacs
+*~
+\#*\#

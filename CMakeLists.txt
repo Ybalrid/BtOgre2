@@ -12,14 +12,19 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 endif()
 
+message("CMAKE_MODULE_PATH :" ${CMAKE_MODULE_PATH})
+
 find_package(Bullet REQUIRED)
 find_package(OGRE REQUIRED)
+
+message("BULLET_INCLUDE_DIR: " ${BULLET_INCLUDE_DIR})
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/
     ${BULLET_INCLUDE_DIRS}
     ${OGRE_INCLUDE_DIRS}
-    ${OGRE_INCLUDE_DIR}/Hlms/Common
+    ${OGRE_HlmsUnlit_INCLUDE_DIR}
+    ${OGRE_HlmsCommon_INCLUDE_DIR}
 )
 
 if(NOT CMAKE_DEBUG_POSTFIX)

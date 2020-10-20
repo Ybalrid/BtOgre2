@@ -61,6 +61,9 @@ getenv_path(OGRE_BUILD)
 getenv_path(OGRE_DEPENDENCIES_DIR)
 getenv_path(PROGRAMFILES)
 
+message("OGRE_SOURCE: " ${OGRE_SOURCE})
+message("OGRE_BUILD: " ${OGRE_BUILD})
+
 # Determine whether to search for a dynamic or static build
 if (OGRE_STATIC)
   set(OGRE_LIB_SUFFIX "Static")
@@ -109,12 +112,22 @@ create_search_paths(OGRE)
 set(OGRE_PREFIX_SOURCE ${OGRE_SOURCE} ${ENV_OGRE_SOURCE})
 set(OGRE_PREFIX_BUILD ${OGRE_BUILD} ${ENV_OGRE_BUILD})
 set(OGRE_PREFIX_DEPENDENCIES_DIR ${OGRE_DEPENDENCIES_DIR} ${ENV_OGRE_DEPENDENCIES_DIR})
+                                 
+message("OGRE_PREFIX_SOURCE:" ${OGRE_PREFIX_SOURCE})
+message("OGRE_PREFIX_BUILD:" ${OGRE_PREFIX_BUILD})
+
 if (OGRE_PREFIX_SOURCE AND OGRE_PREFIX_BUILD)
   foreach(dir ${OGRE_PREFIX_SOURCE})
-    set(OGRE_INC_SEARCH_PATH ${dir}/OgreMain/include ${dir}/Dependencies/include ${dir}/iOSDependencies/include ${dir}/AndroidDependencies/include ${OGRE_INC_SEARCH_PATH})
-    set(OGRE_LIB_SEARCH_PATH ${dir}/lib ${dir}/Dependencies/lib ${dir}/iOSDependencies/lib ${dir}/AndroidDependencies/lib/${ANDROID_ABI} ${OGRE_LIB_SEARCH_PATH})
+    set(OGRE_INC_SEARCH_PATH ${dir}/build/Debug/include ${dir}/OgreMain/include ${dir}/Dependencies/include ${dir}/iOSDependencies/include ${dir}/AndroidDependencies/include ${OGRE_INC_SEARCH_PATH})
+    set(OGRE_LIB_SEARCH_PATH ${dir}/build/Debug/lib ${dir}/Dependencies/lib ${dir}/iOSDependencies/lib ${dir}/AndroidDependencies/lib/${ANDROID_ABI} ${OGRE_LIB_SEARCH_PATH})
+    
     set(OGRE_BIN_SEARCH_PATH ${dir}/Samples/Common/bin ${OGRE_BIN_SEARCH_PATH})
   endforeach(dir)
+
+  foreach(i ${OGRE_INC_SEARCH_PATH})
+      #message("    " ${i})
+  endforeach()
+
   foreach(dir ${OGRE_PREFIX_BUILD})
     set(OGRE_INC_SEARCH_PATH ${dir}/include ${OGRE_INC_SEARCH_PATH})
     if(APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
@@ -185,6 +198,9 @@ find_path(OGRE_CONFIG_INCLUDE_DIR NAMES OgreBuildSettings.h HINTS ${OGRE_INC_SEA
 find_path(OGRE_INCLUDE_DIR NAMES OgreRoot.h HINTS ${OGRE_CONFIG_INCLUDE_DIR} ${OGRE_INC_SEARCH_PATH} ${OGRE_FRAMEWORK_INCLUDES} ${OGRE_PKGC_INCLUDE_DIRS} PATH_SUFFIXES "OGRE")
 set(OGRE_INCOMPATIBLE FALSE)
 
+message("OGRE_CONFIG_INCLUDE_DIR :" ${OGRE_CONFIG_INCLUDE_DIR})
+message("OGRE_INCLUDE_DIR :" ${OGRE_INCLUDE_DIR})
+
 if (OGRE_INCLUDE_DIR)
   if (NOT OGRE_CONFIG_INCLUDE_DIR)
     set(OGRE_CONFIG_INCLUDE_DIR ${OGRE_INCLUDE_DIR})
@@ -209,6 +225,9 @@ if (OGRE_INCLUDE_DIR)
       break()
     endif()
   endforeach()
+
+  message("OGRE_CONFIG_HEADER :" ${OGRE_CONFIG_HEADER})
+
   if (OGRE_CONFIG_HEADER)
     file(READ ${OGRE_CONFIG_HEADER} OGRE_TEMP_CONFIG_CONTENT)
     has_preprocessor_entry(OGRE_TEMP_CONFIG_CONTENT OGRE_STATIC_LIB OGRE_CONFIG_STATIC)
@@ -228,8 +247,18 @@ else ()
   set(OGRE_INCOMPATIBLE FALSE)
 endif ()
 
+message("OGRE_LIBRARY_NAMES :" ${OGRE_LIBRARY_NAMES})
+
+foreach(i ${OGRE_LIB_SEARCH_PATH})
+    #message("    " ${i})
+endforeach()
+
+
 find_library(OGRE_LIBRARY_REL NAMES ${OGRE_LIBRARY_NAMES} HINTS ${OGRE_LIB_SEARCH_PATH} ${OGRE_PKGC_LIBRARY_DIRS} ${OGRE_FRAMEWORK_SEARCH_PATH} PATH_SUFFIXES "" "Release" "RelWithDebInfo" "MinSizeRel")
 find_library(OGRE_LIBRARY_DBG NAMES ${OGRE_LIBRARY_NAMES_DBG} HINTS ${OGRE_LIB_SEARCH_PATH} ${OGRE_PKGC_LIBRARY_DIRS} ${OGRE_FRAMEWORK_SEARCH_PATH} PATH_SUFFIXES "" "Debug")
+
+message("OGRE_LIBRARY_REL: " ${OGRE_LIBRARY_REL})
+message("OGRE_LIBRARY_DBG: " ${OGRE_LIBRARY_DBG})
 
 make_library_set(OGRE_LIBRARY)
 
@@ -246,7 +275,7 @@ findpkg_finish(OGRE)
 add_parent_dir(OGRE_INCLUDE_DIRS OGRE_INCLUDE_DIR)
 if (OGRE_SOURCE)
 	# If working from source rather than SDK, add samples include
-	set(OGRE_INCLUDE_DIRS ${OGRE_INCLUDE_DIRS} "${OGRE_SOURCE}/Samples/Common/include")
+	set(OGRE_INCLUDE_DIRS ${OGRE_INCLUDE_DIRS} "${OGRE_SOURCE}/Samples/Common/include" "${OGRE_SOURCE}/Components/Hlms/Unlit/include")
 endif()
 
 mark_as_advanced(OGRE_CONFIG_INCLUDE_DIR OGRE_MEDIA_DIR OGRE_PLUGIN_DIR_REL OGRE_PLUGIN_DIR_DBG)
@@ -387,8 +416,10 @@ set(OGRE_COMPONENT_SEARCH_PATH_DBG
 macro(ogre_find_component COMPONENT HEADER PATH_HINTS)
   set(OGRE_${COMPONENT}_FIND_QUIETLY ${OGRE_FIND_QUIETLY})
   findpkg_begin(OGRE_${COMPONENT})
+  message("    " ${HEADER} )
   find_path(OGRE_${COMPONENT}_INCLUDE_DIR NAMES ${HEADER} HINTS ${OGRE_INCLUDE_DIRS} ${OGRE_PREFIX_SOURCE} PATH_SUFFIXES ${PATH_HINTS} ${COMPONENT} OGRE/${COMPONENT} )
-  set(OGRE_${COMPONENT}_LIBRARY_NAMES "Ogre${COMPONENT}${OGRE_LIB_SUFFIX}")
+  message("    OGRE_${COMPONENT}_INCLUDE_DIR :" ${OGRE_${COMPONENT}_INCLUDE_DIR} ) 
+  set(OGRE_${COMPONENT}_LIBRARY_NAMES :" Ogre${COMPONENT}${OGRE_LIB_SUFFIX}")
   get_debug_names(OGRE_${COMPONENT}_LIBRARY_NAMES)
   find_library(OGRE_${COMPONENT}_LIBRARY_REL NAMES ${OGRE_${COMPONENT}_LIBRARY_NAMES} HINTS ${OGRE_LIBRARY_DIR_REL} ${OGRE_FRAMEWORK_PATH} PATH_SUFFIXES "" "Release" "RelWithDebInfo" "MinSizeRel")
   find_library(OGRE_${COMPONENT}_LIBRARY_DBG NAMES ${OGRE_${COMPONENT}_LIBRARY_NAMES_DBG} HINTS ${OGRE_LIBRARY_DIR_DBG} ${OGRE_FRAMEWORK_PATH} PATH_SUFFIXES "" "Debug")
@@ -424,9 +455,12 @@ ogre_find_component(HlmsPbs OgreHlmsPbs.h Hlms/Pbs/)
 #look for HlmsPbsMobile component
 ogre_find_component(HlmsPbsMobile OgreHlmsPbsMobile.h Hlms/PbsMobile/)
 #look for HlmsPbsMobile component
-ogre_find_component(HlmsUnlit OgreHlmsUnlit.h Hlms/Unlit)
+ogre_find_component(HlmsUnlit OgreHlmsUnlit.h Components/Hlms/Unlit/include/)
 #look for HlmsUnlit component
 ogre_find_component(HlmsUnlitMobile OgreHlmsUnlitMobile.h Hlms/UnlitMobile)
+
+ogre_find_component(HlmsCommon OgreHlmsBufferManager.h Components/Hlms/Common/include/)
+
 
 #########################################################
 # Find Ogre plugins

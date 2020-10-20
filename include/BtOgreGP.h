@@ -29,6 +29,7 @@
 #include <Vao/OgreVertexArrayObject.h>
 #include <Vao/OgreVertexBufferPacked.h>
 #include <Vao/OgreVertexElements.h>
+#include <Vao/OgreIndexBufferPacked.h>
 
 #include "BtOgreExtras.h"
 #include "BtOgre.hpp"
