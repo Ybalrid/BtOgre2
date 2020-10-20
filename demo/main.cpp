@@ -24,7 +24,8 @@
 #include <OgreMeshManager2.h>
 #include <OgreHlms.h>
 #include <OgreHlmsManager.h>
-#include <Hlms/Pbs/OgreHlmsPbs.h>
+#include <OgreHlmsPbs.h>
+#include <OgreWindow.h>
 #include <Compositor/OgreCompositorManager2.h>
 
 //BtOgre includes
@@ -75,7 +76,7 @@ protected:
 
 	//Window management objects
 	bool running = true;
-	RenderWindow* mWindow;
+	Ogre::Window* mWindow;
 	SDL_Window* mSDLWindow;
 	SDL_Event mSDLEvent;
 	int physicsObjectCount = 0;
@@ -374,7 +375,7 @@ protected:
 		resourceGroupManager->initialiseAllResourceGroups(false);
 
 		//Create a scene manager
-		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, INSTANCING_CULLING_THREADED, "MAIN_SMGR");
+		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, "MAIN_SMGR");
 
 		//Create the camera
 		mCamera = mSceneMgr->createCamera("MyCamera");
@@ -391,7 +392,7 @@ protected:
 		IdString mainWorkspace{ "MainWorkspace" };
 		if (!compositorManager->hasWorkspaceDefinition(mainWorkspace))
 			compositorManager->createBasicWorkspaceDef("MainWorkspace", ColourValue(0.05, 0.4, 0.8, 1));
-		compositorManager->addWorkspace(mSceneMgr, mWindow, mCamera, mainWorkspace, true);
+		compositorManager->addWorkspace(mSceneMgr, mWindow->getTexture(), mCamera, mainWorkspace, true);
 	}
 
 	///Render a frame
@@ -426,7 +427,7 @@ protected:
 				break;
 			case SDL_WINDOWEVENT_RESIZED:
 #ifndef _WIN32
-				mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
+				//mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
 #endif
 				mWindow->windowMovedOrResized();
 				break;

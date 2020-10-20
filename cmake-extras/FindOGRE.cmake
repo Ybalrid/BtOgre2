@@ -413,16 +413,29 @@ set(OGRE_COMPONENT_SEARCH_PATH_DBG
   ${OGRE_BIN_SEARCH_PATH}
 )
 
+message("OGRE_LIBRARY_DIR_REL :" ${OGRE_LIBRARY_DIR_REL})
+message("OGRE_LIBRARY_DIR_DBG :" ${OGRE_LIBRARY_DIR_DBG})
+
 macro(ogre_find_component COMPONENT HEADER PATH_HINTS)
   set(OGRE_${COMPONENT}_FIND_QUIETLY ${OGRE_FIND_QUIETLY})
   findpkg_begin(OGRE_${COMPONENT})
   message("    " ${HEADER} )
   find_path(OGRE_${COMPONENT}_INCLUDE_DIR NAMES ${HEADER} HINTS ${OGRE_INCLUDE_DIRS} ${OGRE_PREFIX_SOURCE} PATH_SUFFIXES ${PATH_HINTS} ${COMPONENT} OGRE/${COMPONENT} )
   message("    OGRE_${COMPONENT}_INCLUDE_DIR :" ${OGRE_${COMPONENT}_INCLUDE_DIR} ) 
+
   set(OGRE_${COMPONENT}_LIBRARY_NAMES :" Ogre${COMPONENT}${OGRE_LIB_SUFFIX}")
+  message("    OGRE_${COMPONENT}_LIBRARY_NAMES :" ${OGRE_${COMPONENT}_LIBRARY_NAMES})
   get_debug_names(OGRE_${COMPONENT}_LIBRARY_NAMES)
+
   find_library(OGRE_${COMPONENT}_LIBRARY_REL NAMES ${OGRE_${COMPONENT}_LIBRARY_NAMES} HINTS ${OGRE_LIBRARY_DIR_REL} ${OGRE_FRAMEWORK_PATH} PATH_SUFFIXES "" "Release" "RelWithDebInfo" "MinSizeRel")
+
   find_library(OGRE_${COMPONENT}_LIBRARY_DBG NAMES ${OGRE_${COMPONENT}_LIBRARY_NAMES_DBG} HINTS ${OGRE_LIBRARY_DIR_DBG} ${OGRE_FRAMEWORK_PATH} PATH_SUFFIXES "" "Debug")
+
+  message("    OGRE_${COMPONENT}_LIBRARY_NAMES_DBG :" ${OGRE_${COMPONENT}_LIBRARY_NAMES_DBG})
+  message("    OGRE_${COMPONENT}_LIBRARY_NAMES :" ${OGRE_${COMPONENT}_LIBRARY_NAMES})
+  message("    OGRE_${COMPONENT}_LIBRARY_DBG :" ${OGRE_${COMPONENT}_LIBRARY_DBG} ) 
+  message("    OGRE_${COMPONENT}_LIBRARY_REL :" ${OGRE_${COMPONENT}_LIBRARY_REL} ) 
+
   make_library_set(OGRE_${COMPONENT}_LIBRARY)
   findpkg_finish(OGRE_${COMPONENT})
   if (OGRE_${COMPONENT}_FOUND)
@@ -451,7 +464,7 @@ ogre_find_component(Volume OgreVolumePrerequisites.h "")
 # look for Overlay component
 ogre_find_component(Overlay OgreOverlaySystem.h "")
 #look for HlmsPbs component
-ogre_find_component(HlmsPbs OgreHlmsPbs.h Hlms/Pbs/)
+ogre_find_component(HlmsPbs OgreHlmsPbs.h Components/Hlms/Pbs/include/)
 #look for HlmsPbsMobile component
 ogre_find_component(HlmsPbsMobile OgreHlmsPbsMobile.h Hlms/PbsMobile/)
 #look for HlmsPbsMobile component
