@@ -118,21 +118,23 @@ public:
 	~BtOgreTestApplication()
 	{
 		//Free rigid bodies
-		phyWorld->removeRigidBody(mNinjaBody);
-		delete mNinjaBody->getMotionState();
-		delete mNinjaBody;
-		delete mNinjaShape;
-
-		phyWorld->removeRigidBody(mGroundBody);
-		delete mGroundBody->getMotionState();
-		delete mGroundBody;
-
-		//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
-		delete reinterpret_cast<btTriangleMeshShape*>(mGroundShape)->getMeshInterface();
-		delete mGroundShape;
+		if (mNinjaBody) {
+			phyWorld->removeRigidBody(mNinjaBody);
+			delete mNinjaBody->getMotionState();
+			delete mNinjaBody;
+			delete mNinjaShape;
+		}
+		if (mGroundBody) {
+			phyWorld->removeRigidBody(mGroundBody);
+			delete mGroundBody->getMotionState();
+			delete mGroundBody;
+			//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
+			delete reinterpret_cast<btTriangleMeshShape*>(mGroundShape)->getMeshInterface();
+			delete mGroundShape;
+		}
 
 		//Free Bullet stuff.
-		delete mDebugDrawer;
+		//delete mDebugDrawer;
 		delete phyWorld;
 
 		delete mSolver;
@@ -141,7 +143,7 @@ public:
 		delete mBroadphase;
 
 		//Stop Ogre
-		delete mRoot;
+		//delete mRoot;
 
 		//Stop and cleanup SDL
 		SDL_DestroyWindow(mSDLWindow);
@@ -292,11 +294,8 @@ protected:
 
 	void setup()
 	{
-		//Initialize Ogre
-		mRoot = new Root("plugins.cfg", "ogre.cfg", "Ogre.log");
-		LogManager::getSingleton().setLogDetail(LL_BOREME);
-		mRoot->showConfigDialog();
 
+		Ogre::LogManager::getSingleton().setLogDetail(Ogre::LoggingLevel::LL_BOREME);
 		//Do not create a window with ogre yet. We're using the SDL to handle window and events:
 		mRoot->initialise(false);
 
@@ -324,17 +323,18 @@ protected:
 		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
 
 		//Get access to native (os/window manager dependent) window information
-		SDL_SysWMinfo wmInfo;
-		SDL_VERSION(&wmInfo.version);
-		SDL_GetWindowWMInfo(mSDLWindow, &wmInfo);
+		SDL_SysWMinfo* wmInfo = new SDL_SysWMinfo;
+		SDL_VERSION(&wmInfo->version);
+		SDL_GetWindowWMInfo(mSDLWindow, wmInfo);
 
 		//Retreive window handle
 		std::string winHandle;
-		switch (wmInfo.subsystem)
+		switch (wmInfo->subsystem)
 		{
 #ifdef _WIN32
 		case SDL_SYSWM_WINDOWS:
-			winHandle = StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.win.window));
+			//winHandle = StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.win.window));
+			winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo->info.win.window);
 			break;
 #else
 		case SDL_SYSWM_X11:
@@ -343,8 +343,8 @@ protected:
 			//TODO handle wayland (and maybe mir?)
 #endif
 		default:
-			LogManager::getSingleton().logMessage("Unimplemented window handle retreival for subsystem " + std::to_string(wmInfo.subsystem));
-			throw std::runtime_error("Unimplemented window handle retreival code for current operating system! subsystem " + std::to_string(wmInfo.subsystem));
+			LogManager::getSingleton().logMessage("Unimplemented window handle retreival for subsystem " + std::to_string(wmInfo->subsystem));
+			throw std::runtime_error("Unimplemented window handle retreival code for current operating system! subsystem " + std::to_string(wmInfo->subsystem));
 			break;
 		}
 
@@ -364,12 +364,12 @@ protected:
 
 		//Declare some resources
 		auto resourceGroupManager = ResourceGroupManager::getSingletonPtr();
-		resourceGroupManager->addResourceLocation("./data/OgreCore.zip", "Zip");
-		resourceGroupManager->addResourceLocation("./data/Meshes", "FileSystem");
-		resourceGroupManager->addResourceLocation("./data/Textures", "FileSystem");
+		resourceGroupManager->addResourceLocation("../../data/OgreCore.zip", "Zip");
+		resourceGroupManager->addResourceLocation("../../data/Meshes", "FileSystem");
+		resourceGroupManager->addResourceLocation("../../data/Textures", "FileSystem");
 
 		//Init the HLMS
-		declareHlmsLibrary("HLMS");
+		declareHlmsLibrary("../../data");
 
 		//All resources initialized
 		resourceGroupManager->initialiseAllResourceGroups(false);
@@ -485,6 +485,9 @@ protected:
 public:
 	void go()
 	{
+		auto root = std::make_unique<Ogre::Root>();
+		mRoot = root->getSingletonPtr();
+		if (!root->showConfigDialog()) return;
 		setup();
 		while (running)
 		{

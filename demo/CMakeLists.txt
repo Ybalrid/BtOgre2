@@ -30,7 +30,10 @@ include_directories(
         ${SDL2_INCLUDE_DIR}
 )
 
-link_directories(${BULLET_LIBRARY_DIRS} "/mnt/stock/clients/bjuin/SDL2/SDL2-2.0.12/build")
+
+
+link_directories(
+${BULLET_LIBRARY_DIRS})
 
 
 #Set the executable
@@ -38,6 +41,7 @@ add_executable(BtOgre21DEMO main.cpp)
 
 
 message("OGRE_HlmsPbs_LIBRARIES :" ${OGRE_HlmsPbs_LIBRARIE})
+message("BULLET_LIBRARY_DIRS :" ${BULLET_LIBRARY_DIRS})
 
 #Link the required libraries
 target_link_libraries(
@@ -48,7 +52,6 @@ target_link_libraries(
         ${OGRE_HlmsPbs_LIBRARY_DBG}
         ${OGRE_HlmsUnlit_LIBRARY_DBG}
         ${SDL2_LIBRARY}
-        dl
 )
 
 #Force MSVC to use the Windows subsystem. This makes the program GUI only and make the entry point "WinMain"
@@ -65,8 +68,7 @@ file(COPY ${OGRE_MEDIA_DIR}/Hlms DESTINATION ${CMAKE_BINARY_DIR}/HLMS/)
 if(UNIX)
 #    file(COPY ${OGRE_MEDIA_DIR}/../plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
 elseif(MSVC)
-    file(COPY ${OGRE_MEDIA_DIR}/../bin/release/plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
-    file(GLOB GLOBBED_DLLS ${OGRE_MEDIA_DIR}/../bin/release/*.dll)
-    file(COPY ${GLOBBED_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
-
+#    file(COPY ${OGRE_MEDIA_DIR}/../bin/release/plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
+#    file(GLOB GLOBBED_DLLS ${OGRE_MEDIA_DIR}/../bin/release/*.dll)
+#    file(COPY ${GLOBBED_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
 endif()

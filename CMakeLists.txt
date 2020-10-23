@@ -21,7 +21,7 @@ message("BULLET_INCLUDE_DIR: " ${BULLET_INCLUDE_DIR})
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/
-    ${BULLET_INCLUDE_DIRS}
+    ${BULLET_INCLUDE_DIR}
     ${OGRE_INCLUDE_DIRS}
     ${OGRE_HlmsUnlit_INCLUDE_DIR}
     ${OGRE_HlmsCommon_INCLUDE_DIR}
