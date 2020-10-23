@@ -12,7 +12,7 @@ CTestTestfile.cmake
 
 *.sln*
 *.vcxproj*
-build/*
+build*/*
 
 documentation/generated/*
 

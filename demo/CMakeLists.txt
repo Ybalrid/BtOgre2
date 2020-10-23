@@ -42,6 +42,7 @@ add_executable(BtOgre21DEMO main.cpp)
 
 message("OGRE_HlmsPbs_LIBRARIES :" ${OGRE_HlmsPbs_LIBRARIE})
 message("BULLET_LIBRARY_DIRS :" ${BULLET_LIBRARY_DIRS})
+message("BULLET_LIBRARIES :" ${BULLET_LIBRARIES})
 
 #Link the required libraries
 target_link_libraries(
@@ -53,6 +54,8 @@ target_link_libraries(
         ${OGRE_HlmsUnlit_LIBRARY_DBG}
         ${SDL2_LIBRARY}
 )
+
+message("OGRE_LIBRARIES :" ${OGRE_LIBRARIES})
 
 #Force MSVC to use the Windows subsystem. This makes the program GUI only and make the entry point "WinMain"
 if (MSVC)
