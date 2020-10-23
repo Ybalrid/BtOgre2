@@ -18,7 +18,11 @@ set ( BULLET_INCLUDE_DIRS   "${BULLET_ROOT_DIR}/include/bullet" )
 set ( BULLET_LIBRARIES_REL      "LinearMath;Bullet3Common;BulletInverseDynamics;BulletCollision;BulletDynamics;BulletSoftBody" )
 
 foreach(name ${BULLET_LIBRARIES_REL})
-  set(BULLET_LIBRARIES_DBG ${BULLET_LIBRARIES_DBG} ${name}_Debug)
+  if(WIN32)
+      set(BULLET_LIBRARIES_DBG ${BULLET_LIBRARIES_DBG} ${name}_Debug)
+  else()
+      set(BULLET_LIBRARIES_DBG ${BULLET_LIBRARIES_DBG} ${name})
+  endif()
 endforeach(name)
 
 set(BULLET_LIBRARIES ${BULLET_LIBRARIES_DBG})

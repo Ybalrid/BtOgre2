@@ -4,11 +4,31 @@
 
 set(BtOgre21_ROOT $ENV{BtOgre21_ROOT})
 
+if(NOT BtOgre21_ROOT)
+    message(FATAL_ERROR "The environement variable: BtOgre21_ROOT is not set")
+endif()
+
 message("BtOgre21_ROOT :" "${BtOgre21_ROOT}")
 
-find_path(BtOgre21_INCLUDE_DIR BtOgre.hpp HINTS ${BtOgre21_ROOT}/include PATH_SUFFIXES BtOgre21)
-find_library(BtOgre21_LIBRARY libBtOgre21.a BtOgre21.lib libBtOgre21 BtOgre21 HINTS ${BtOgre21_ROOT}/lib ${BtOgre21_ROOT}/build/Release/ PATH_SUFFIXES BtOgre21 BtOgre lib)
-find_library(BtOgre21_DEBUG_LIBRARY libBtOgre21_d.a BtOgre21_d.lib libBtOgre21_d BtOgre21_d HINTS ${BtOgre21_ROOT}/lib ${BtOgre21_ROOT}/build/Debug PATH_SUFFIXES BtOgre21 BtOgre lib)
+find_path(BtOgre21_INCLUDE_DIR BtOgre.hpp 
+    HINTS ${BtOgre21_ROOT}/include 
+    PATH_SUFFIXES BtOgre21)
+
+find_library(BtOgre21_LIBRARY libBtOgre21.a BtOgre21.lib libBtOgre21 BtOgre21 
+             HINTS ${BtOgre21_ROOT}/lib 
+                   ${BtOgre21_ROOT}/build/Release/ 
+                   ${BtOgre21_ROOT}/build/ 
+             PATH_SUFFIXES BtOgre21 
+                           BtOgre 
+                           lib)
+
+find_library(BtOgre21_DEBUG_LIBRARY libBtOgre21_d.a BtOgre21_d.lib libBtOgre21_d BtOgre21_d 
+             HINTS ${BtOgre21_ROOT}/lib 
+                   ${BtOgre21_ROOT}/build/Debug 
+                   ${BtOgre21_ROOT}/build/ 
+             PATH_SUFFIXES BtOgre21 
+                           BtOgre 
+                           lib)
 
 
 include(FindPackageHandleStandardArgs)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.18)
 
 project(BtOgre21DEMO)
 
@@ -6,6 +6,12 @@ project(BtOgre21DEMO)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/../cmake-extras/ ${PROJECT_SOURCE_DIR}/../CMake)
 
 set(CMAKE_CXX_STANDARD 11)
+
+#set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake-extras/;
+#                      ${PROJECT_SOURCE_DIR}/../CMake/)
+
+message("CMAKE_MODULE_PATH :" ${CMAKE_MODULE_PATH})
+include(../cmake-extras/OGRE.cmake)
 
 #Need the physics engine
 find_package(Bullet REQUIRED)
@@ -32,6 +38,7 @@ include_directories(
 
 
 
+
 link_directories(
 ${BULLET_LIBRARY_DIRS})
 
@@ -43,6 +50,7 @@ add_executable(BtOgre21DEMO main.cpp)
 message("OGRE_HlmsPbs_LIBRARIES :" ${OGRE_HlmsPbs_LIBRARIE})
 message("BULLET_LIBRARY_DIRS :" ${BULLET_LIBRARY_DIRS})
 message("BULLET_LIBRARIES :" ${BULLET_LIBRARIES})
+message("BtOgre21_LIBRARIES :" ${BtOgre21_LIBRARIES})
 
 #Link the required libraries
 target_link_libraries(
@@ -55,7 +63,13 @@ target_link_libraries(
         ${SDL2_LIBRARY}
 )
 
+target_compile_features(BtOgre21DEMO PUBLIC cxx_std_14)
+
 message("OGRE_LIBRARIES :" ${OGRE_LIBRARIES})
+
+set_target_properties(BtOgre21DEMO 
+                      PROPERTIES
+                      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}")
 
 #Force MSVC to use the Windows subsystem. This makes the program GUI only and make the entry point "WinMain"
 if (MSVC)
@@ -66,10 +80,21 @@ if (MSVC)
 endif ()
 
 #install binary resources
-file(COPY data DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${OGRE_MEDIA_DIR}/Hlms DESTINATION ${CMAKE_BINARY_DIR}/HLMS/)
+#file(COPY data DESTINATION ${CMAKE_BINARY_DIR})
+#file(COPY ${OGRE_MEDIA_DIR}/Hlms DESTINATION ${CMAKE_BINARY_DIR}/data/HLMS/)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1" )
+endif()
+
+setupOgre( OGRE_SOURCE, TOTO, OGRE_LIBRARIES, FALSE )
+
 if(UNIX)
-#    file(COPY ${OGRE_MEDIA_DIR}/../plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
+    #file(COPY ${OGRE_MEDIA_DIR}/../plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
+    #file( COPY "${OGRE_SOURCE}/Samples/Media/packs/DebugPack.zip"	DESTINATION "${CMAKE_SOURCE_DIR}/bin/Data" )
+
+
+
 elseif(MSVC)
 #    file(COPY ${OGRE_MEDIA_DIR}/../bin/release/plugins.cfg DESTINATION ${CMAKE_BINARY_DIR})
 #    file(GLOB GLOBBED_DLLS ${OGRE_MEDIA_DIR}/../bin/release/*.dll)

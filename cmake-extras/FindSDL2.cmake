@@ -70,6 +70,10 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
+set(SDL2DIR $ENV{SDL2DIR})
+if(NOT SDL2DIR)
+    message(FATAL_ERROR "The environement variable: SDL2DIR is not set")
+endif()
 
 FIND_PATH(SDL2_INCLUDE_DIR SDL.h
   HINTS
@@ -85,12 +89,15 @@ FIND_PATH(SDL2_INCLUDE_DIR SDL.h
   /opt/csw # Blastwave
   /opt
 )
-#MESSAGE("SDL2_INCLUDE_DIR is ${SDL2_INCLUDE_DIR}")
+
+MESSAGE("SDL2_INCLUDE_DIR is ${SDL2_INCLUDE_DIR}")
+
+
 
 FIND_LIBRARY(SDL2_LIBRARY_TEMP
   NAMES SDL2
   HINTS
-  $ENV{SDL2DIR}
+  $ENV{SDL2DIR}/build
   PATH_SUFFIXES lib64 lib lib/${MSVC_CXX_ARCHITECTURE_ID}/Release
   PATHS
   /sw
@@ -196,6 +203,10 @@ if (WIN32)
 	  PATH_SUFFIXES "" Debug )
 endif()
 mark_as_advanced(SDL2_BINARY_REL SDL2_BINARY_DBG)
+
+if(UNIX)
+   SET(SDL2_LIBRARY ${SDL2_LIBRARY} dl)
+endif()
 
 IF(SDL2_STATIC)
   if (UNIX AND NOT APPLE)
