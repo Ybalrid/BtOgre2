@@ -58,8 +58,8 @@ target_link_libraries(
         ${BtOgre21_LIBRARIES}
         ${BULLET_LIBRARIES}
         ${OGRE_LIBRARIES}
-        ${OGRE_HlmsPbs_LIBRARY_DBG}
-        ${OGRE_HlmsUnlit_LIBRARY_DBG}
+        ${OGRE_HlmsPbs_LIBRARY}
+        ${OGRE_HlmsUnlit_LIBRARY}
         ${SDL2_LIBRARY}
 )
 
