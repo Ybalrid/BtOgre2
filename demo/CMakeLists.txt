@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.17)
 
 project(BtOgre21DEMO)
 
@@ -66,10 +66,15 @@ target_link_libraries(
 target_compile_features(BtOgre21DEMO PUBLIC cxx_std_14)
 
 message("OGRE_LIBRARIES :" ${OGRE_LIBRARIES})
-
-set_target_properties(BtOgre21DEMO 
-                      PROPERTIES
-                      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}")
+if (MSVC)
+  set_target_properties(BtOgre21DEMO 
+                        PROPERTIES
+                        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+else()
+  set_target_properties(BtOgre21DEMO 
+                        PROPERTIES
+                        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}")
+endif()
 
 #Force MSVC to use the Windows subsystem. This makes the program GUI only and make the entry point "WinMain"
 if (MSVC)
