@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.17)
 
 project(BtOgre21DEMO)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1" )
+endif()
+
 #Use the cmake-extra from the BtOgre directory, and the findBtOgre from the BtOgre directory too 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/../cmake-extras/ ${PROJECT_SOURCE_DIR}/../CMake)
 
@@ -47,7 +51,7 @@ ${BULLET_LIBRARY_DIRS})
 add_executable(BtOgre21DEMO main.cpp)
 
 
-message("OGRE_HlmsPbs_LIBRARIES :" ${OGRE_HlmsPbs_LIBRARIE})
+message("OGRE_HlmsPbs_LIBRARY :" ${OGRE_HlmsPbs_LIBRARY})
 message("BULLET_LIBRARY_DIRS :" ${BULLET_LIBRARY_DIRS})
 message("BULLET_LIBRARIES :" ${BULLET_LIBRARIES})
 message("BtOgre21_LIBRARIES :" ${BtOgre21_LIBRARIES})
@@ -87,10 +91,6 @@ endif ()
 #install binary resources
 #file(COPY data DESTINATION ${CMAKE_BINARY_DIR})
 #file(COPY ${OGRE_MEDIA_DIR}/Hlms DESTINATION ${CMAKE_BINARY_DIR}/data/HLMS/)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1" )
-endif()
 
 setupOgre( OGRE_SOURCE, TOTO, OGRE_LIBRARIES, FALSE )
 
