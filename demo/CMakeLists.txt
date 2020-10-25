@@ -70,6 +70,8 @@ if (MSVC)
   set_target_properties(BtOgre21DEMO 
                         PROPERTIES
                         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+  set_property(TARGET BtOgre21DEMO PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$(Configuration)")
+
 else()
   set_target_properties(BtOgre21DEMO 
                         PROPERTIES

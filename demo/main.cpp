@@ -329,28 +329,28 @@ protected:
 		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
 
 		//Get access to native (os/window manager dependent) window information
-		SDL_SysWMinfo* wmInfo = new SDL_SysWMinfo;
-		SDL_VERSION(&wmInfo->version);
-		SDL_GetWindowWMInfo(mSDLWindow, wmInfo);
+		SDL_SysWMinfo wmInfo = SDL_SysWMinfo();
+		SDL_VERSION(&wmInfo.version); 
+		SDL_GetWindowWMInfo(mSDLWindow, &wmInfo);
 
 		//Retreive window handle
 		std::string winHandle;
-		switch (wmInfo->subsystem)
+		switch (wmInfo.subsystem)
 		{
 #ifdef _WIN32
 		case SDL_SYSWM_WINDOWS:
 			//winHandle = StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.win.window));
-			winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo->info.win.window);
+			winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo.info.win.window);
 			break;
 #else
 		case SDL_SYSWM_X11:
-			winHandle = Ogre::StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo->info.x11.window));
+			winHandle = Ogre::StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.x11.window));
 			break;
 			//TODO handle wayland (and maybe mir?)
 #endif
 		default:
-			LogManager::getSingleton().logMessage("Unimplemented window handle retreival for subsystem " + std::to_string(wmInfo->subsystem));
-			throw std::runtime_error("Unimplemented window handle retreival code for current operating system! subsystem " + std::to_string(wmInfo->subsystem));
+			LogManager::getSingleton().logMessage("Unimplemented window handle retreival for subsystem " + std::to_string(wmInfo.subsystem));
+			throw std::runtime_error("Unimplemented window handle retreival code for current operating system! subsystem " + std::to_string(wmInfo.subsystem));
 			break;
 		}
 
