@@ -196,21 +196,14 @@ protected:
 		{
 			Archive* archiveLibrary = ArchiveManager::getSingletonPtr()->load(dataFolder + libraryFolderPath, "FileSystem", true);
 			archiveUnlitLibraryFolders.push_back(archiveLibrary);
-                        
-                          LogManager::getSingleton().logMessage("hlms " + dataFolder + libraryFolderPath);
 		}
-                LogManager::getSingleton().logMessage("hlms 1");
 		//Create and register the unlit Hlms
 		HlmsUnlit* hlmsUnlit = OGRE_NEW HlmsUnlit(archiveUnlit, &archiveUnlitLibraryFolders);
-                LogManager::getSingleton().logMessage("hlms 101");
 		Root::getSingleton().getHlmsManager()->registerHlms(hlmsUnlit);
-                LogManager::getSingleton().logMessage("hlms 102");
 		hlmsUnlit->setDebugOutputPath(false, false);
-                LogManager::getSingleton().logMessage("hlms 11");
 		//Do the same for HlmsPbs:
 		HlmsPbs::getDefaultPaths(dataFolderPath, libraryFoldersPaths);
 		Archive* archivePbs = ArchiveManager::getSingletonPtr()->load(dataFolder + dataFolderPath, "FileSystem", true);
-                LogManager::getSingleton().logMessage("hlms 12");
 		//Get the library archive(s)
 		ArchiveVec archivePbsLibraryFolders;
 		for (const auto& libraryFolderPath : libraryFoldersPaths)
@@ -220,9 +213,7 @@ protected:
 		}
 
 		//Create and register
-                LogManager::getSingleton().logMessage("hlms 2");
 		HlmsPbs* hlmsPbs = OGRE_NEW HlmsPbs(archivePbs, &archivePbsLibraryFolders);
-                LogManager::getSingleton().logMessage("hlms 3");
 		Root::getSingleton().getHlmsManager()->registerHlms(hlmsPbs);
 		hlmsPbs->setDebugOutputPath(false, false);
 	}
@@ -375,10 +366,8 @@ protected:
 		resourceGroupManager->addResourceLocation("../../data/Textures", "FileSystem");
 
 		//Init the HLMS
-                LogManager::getSingleton().logMessage("hlms init start");
 		declareHlmsLibrary("../Data");
 
-                LogManager::getSingleton().logMessage("hlms init done");
 		//All resources initialized
 		resourceGroupManager->initialiseAllResourceGroups(false);
 
