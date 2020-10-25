@@ -70,6 +70,12 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
+set(SDL2DIR $ENV{SDL2DIR})
+if(NOT SDL2DIR)
+    message(FATAL_ERROR "The environement variable: SDL2DIR is not set")
+endif()
+
+message("SDL2DIR :" ${SDL2DIR})
 
 FIND_PATH(SDL2_INCLUDE_DIR SDL.h
   HINTS
@@ -85,13 +91,16 @@ FIND_PATH(SDL2_INCLUDE_DIR SDL.h
   /opt/csw # Blastwave
   /opt
 )
-#MESSAGE("SDL2_INCLUDE_DIR is ${SDL2_INCLUDE_DIR}")
+
+MESSAGE("SDL2_INCLUDE_DIR is ${SDL2_INCLUDE_DIR}")
+
+
 
 FIND_LIBRARY(SDL2_LIBRARY_TEMP
   NAMES SDL2
   HINTS
-  $ENV{SDL2DIR}
-  PATH_SUFFIXES lib64 lib
+  $ENV{SDL2DIR}/build $ENV{SDL2DIR}/lib
+  PATH_SUFFIXES lib64 lib lib/${MSVC_CXX_ARCHITECTURE_ID}/Release
   PATHS
   /sw
   /opt/local
@@ -151,9 +160,9 @@ IF(SDL2_LIBRARY_TEMP)
   # I think it has something to do with the CACHE STRING.
   # So I use a temporary variable until the end so I can set the
   # "real" variable in one-shot.
-  IF(APPLE)
+  IF(APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
     SET(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} "-framework Cocoa")
-  ENDIF(APPLE)
+  ENDIF()
 
   # For threads, as mentioned Apple doesn't need this.
   # In fact, there seems to be a problem if I used the Threads package
@@ -167,9 +176,9 @@ IF(SDL2_LIBRARY_TEMP)
     SET(SDL2_LIBRARY_TEMP ${MINGW32_LIBRARY} ${SDL2_LIBRARY_TEMP})
   ENDIF(MINGW)
   
-  IF(WIN32)
+  IF(WIN32 AND NOT WINDOWS_STORE AND NOT WINDOWS_PHONE)
     SET(SDL2_LIBRARY_TEMP winmm imm32 version msimg32 ${SDL2_LIBRARY_TEMP})
-  ENDIF(WIN32)
+  ENDIF(WIN32 AND NOT WINDOWS_STORE AND NOT WINDOWS_PHONE)
 
   # Set the final string here so the GUI reflects the final state.
   SET(SDL2_LIBRARY ${SDL2_LIBRARY_TEMP} CACHE STRING "Where the SDL2 Library can be found")
@@ -183,6 +192,23 @@ INCLUDE(FindPackageHandleStandardArgs)
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SDL2
                                   REQUIRED_VARS SDL2_LIBRARY SDL2_INCLUDE_DIR)
+
+if (WIN32)
+	set(SDL2_BIN_SEARCH_PATH ${OGRE_DEPENDENCIES_DIR}/bin ${CMAKE_SOURCE_DIR}/Dependencies/bin ${SDL2_HOME}/dll
+		${ENV_SDL2_HOME}/dll ${ENV_OGRE_DEPENDENCIES_DIR}/bin
+		${OGRE_SOURCE}/Dependencies/bin ${ENV_OGRE_SOURCE}/Dependencies/bin
+		${OGRE_SDK}/bin ${ENV_OGRE_SDK}/bin
+		${OGRE_HOME}/bin ${ENV_OGRE_HOME}/bin)
+	find_file(SDL2_BINARY_REL NAMES "SDL2.dll" HINTS ${SDL2_BIN_SEARCH_PATH}
+	  PATH_SUFFIXES "" Release RelWithDebInfo MinSizeRel)
+	find_file(SDL2_BINARY_DBG NAMES "SDL2_d.dll" "SDL2.dll" HINTS ${SDL2_BIN_SEARCH_PATH}
+	  PATH_SUFFIXES "" Debug )
+endif()
+mark_as_advanced(SDL2_BINARY_REL SDL2_BINARY_DBG)
+
+if(UNIX)
+   SET(SDL2_LIBRARY ${SDL2_LIBRARY} dl)
+endif()
 
 IF(SDL2_STATIC)
   if (UNIX AND NOT APPLE)

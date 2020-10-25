@@ -24,7 +24,8 @@
 #include <OgreMeshManager2.h>
 #include <OgreHlms.h>
 #include <OgreHlmsManager.h>
-#include <Hlms/Pbs/OgreHlmsPbs.h>
+#include <OgreHlmsPbs.h>
+#include <OgreWindow.h>
 #include <Compositor/OgreCompositorManager2.h>
 
 //BtOgre includes
@@ -75,7 +76,7 @@ protected:
 
 	//Window management objects
 	bool running = true;
-	RenderWindow* mWindow;
+	Ogre::Window* mWindow;
 	SDL_Window* mSDLWindow;
 	SDL_Event mSDLEvent;
 	int physicsObjectCount = 0;
@@ -117,21 +118,23 @@ public:
 	~BtOgreTestApplication()
 	{
 		//Free rigid bodies
-		phyWorld->removeRigidBody(mNinjaBody);
-		delete mNinjaBody->getMotionState();
-		delete mNinjaBody;
-		delete mNinjaShape;
-
-		phyWorld->removeRigidBody(mGroundBody);
-		delete mGroundBody->getMotionState();
-		delete mGroundBody;
-
-		//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
-		delete reinterpret_cast<btTriangleMeshShape*>(mGroundShape)->getMeshInterface();
-		delete mGroundShape;
+		if (mNinjaBody) {
+			phyWorld->removeRigidBody(mNinjaBody);
+			delete mNinjaBody->getMotionState();
+			delete mNinjaBody;
+			delete mNinjaShape;
+		}
+		if (mGroundBody) {
+			phyWorld->removeRigidBody(mGroundBody);
+			delete mGroundBody->getMotionState();
+			delete mGroundBody;
+			//Here's a quirk of the cleanup of a "triangle" based collision shape: You need to delete the mesh interface
+			delete reinterpret_cast<btTriangleMeshShape*>(mGroundShape)->getMeshInterface();
+			delete mGroundShape;
+		}
 
 		//Free Bullet stuff.
-		delete mDebugDrawer;
+		//delete mDebugDrawer;
 		delete phyWorld;
 
 		delete mSolver;
@@ -140,7 +143,7 @@ public:
 		delete mBroadphase;
 
 		//Stop Ogre
-		delete mRoot;
+		//delete mRoot;
 
 		//Stop and cleanup SDL
 		SDL_DestroyWindow(mSDLWindow);
@@ -194,16 +197,13 @@ protected:
 			Archive* archiveLibrary = ArchiveManager::getSingletonPtr()->load(dataFolder + libraryFolderPath, "FileSystem", true);
 			archiveUnlitLibraryFolders.push_back(archiveLibrary);
 		}
-
 		//Create and register the unlit Hlms
 		HlmsUnlit* hlmsUnlit = OGRE_NEW HlmsUnlit(archiveUnlit, &archiveUnlitLibraryFolders);
 		Root::getSingleton().getHlmsManager()->registerHlms(hlmsUnlit);
 		hlmsUnlit->setDebugOutputPath(false, false);
-
 		//Do the same for HlmsPbs:
 		HlmsPbs::getDefaultPaths(dataFolderPath, libraryFoldersPaths);
 		Archive* archivePbs = ArchiveManager::getSingletonPtr()->load(dataFolder + dataFolderPath, "FileSystem", true);
-
 		//Get the library archive(s)
 		ArchiveVec archivePbsLibraryFolders;
 		for (const auto& libraryFolderPath : libraryFoldersPaths)
@@ -291,11 +291,8 @@ protected:
 
 	void setup()
 	{
-		//Initialize Ogre
-		mRoot = new Root("plugins.cfg", "ogre.cfg", "Ogre.log");
-		LogManager::getSingleton().setLogDetail(LL_BOREME);
-		mRoot->showConfigDialog();
 
+		Ogre::LogManager::getSingleton().setLogDetail(Ogre::LoggingLevel::LL_BOREME);
 		//Do not create a window with ogre yet. We're using the SDL to handle window and events:
 		mRoot->initialise(false);
 
@@ -323,8 +320,8 @@ protected:
 		mSDLWindow = SDL_CreateWindow("BtOgre21 Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
 
 		//Get access to native (os/window manager dependent) window information
-		SDL_SysWMinfo wmInfo;
-		SDL_VERSION(&wmInfo.version);
+		SDL_SysWMinfo wmInfo = SDL_SysWMinfo();
+		SDL_VERSION(&wmInfo.version); 
 		SDL_GetWindowWMInfo(mSDLWindow, &wmInfo);
 
 		//Retreive window handle
@@ -333,7 +330,8 @@ protected:
 		{
 #ifdef _WIN32
 		case SDL_SYSWM_WINDOWS:
-			winHandle = StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.win.window));
+			//winHandle = StringConverter::toString(reinterpret_cast<uintptr_t>(wmInfo.info.win.window));
+			winHandle = Ogre::StringConverter::toString((uintptr_t)wmInfo.info.win.window);
 			break;
 #else
 		case SDL_SYSWM_X11:
@@ -363,18 +361,18 @@ protected:
 
 		//Declare some resources
 		auto resourceGroupManager = ResourceGroupManager::getSingletonPtr();
-		resourceGroupManager->addResourceLocation("./data/OgreCore.zip", "Zip");
-		resourceGroupManager->addResourceLocation("./data/Meshes", "FileSystem");
-		resourceGroupManager->addResourceLocation("./data/Textures", "FileSystem");
+		resourceGroupManager->addResourceLocation("../../data/OgreCore.zip", "Zip");
+		resourceGroupManager->addResourceLocation("../../data/Meshes", "FileSystem");
+		resourceGroupManager->addResourceLocation("../../data/Textures", "FileSystem");
 
 		//Init the HLMS
-		declareHlmsLibrary("HLMS");
+		declareHlmsLibrary("../Data");
 
 		//All resources initialized
 		resourceGroupManager->initialiseAllResourceGroups(false);
 
 		//Create a scene manager
-		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, INSTANCING_CULLING_THREADED, "MAIN_SMGR");
+		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, "MAIN_SMGR");
 
 		//Create the camera
 		mCamera = mSceneMgr->createCamera("MyCamera");
@@ -391,7 +389,7 @@ protected:
 		IdString mainWorkspace{ "MainWorkspace" };
 		if (!compositorManager->hasWorkspaceDefinition(mainWorkspace))
 			compositorManager->createBasicWorkspaceDef("MainWorkspace", ColourValue(0.05, 0.4, 0.8, 1));
-		compositorManager->addWorkspace(mSceneMgr, mWindow, mCamera, mainWorkspace, true);
+		compositorManager->addWorkspace(mSceneMgr, mWindow->getTexture(), mCamera, mainWorkspace, true);
 	}
 
 	///Render a frame
@@ -426,7 +424,7 @@ protected:
 				break;
 			case SDL_WINDOWEVENT_RESIZED:
 #ifndef _WIN32
-				mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
+				//mWindow->resize(mSDLEvent.window.data1, mSDLEvent.window.data2);
 #endif
 				mWindow->windowMovedOrResized();
 				break;
@@ -484,6 +482,9 @@ protected:
 public:
 	void go()
 	{
+		auto root = std::make_unique<Ogre::Root>();
+		mRoot = root->getSingletonPtr();
+		if (!root->showConfigDialog()) return;
 		setup();
 		while (running)
 		{
