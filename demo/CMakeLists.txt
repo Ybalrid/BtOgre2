@@ -21,6 +21,11 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/exampleapp
         ${BULLET_INCLUDE_DIRS}
         ${OGRE_INCLUDE_DIRS}
+        ${OGRE_INCLUDE_DIRS}/Hlms/Common/
+        ${OGRE_INCLUDE_DIRS}/OGRE/Overlay/
+        ${OGRE_INCLUDE_DIRS}/OGRE/Hlms/Pbs/
+        ${OGRE_INCLUDE_DIRS}/OGRE/Hlms/Common/
+        ${OGRE_INCLUDE_DIRS}/OGRE/Hlms/Unlit/
         ${OGRE_HlmsPbs_INCLUDE_DIRS}
         ${OGRE_HlmsUnlit_INCLUDE_DIRS}
         ${BtOgre21_INCLUDE_DIRS}
