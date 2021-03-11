@@ -1,5 +1,7 @@
 #include "BtOgreExtras.h"
 #include <utility>
+#include "OgreManualObject.h"
+#include "OgreManualObject2.h"
 
 using namespace Ogre;
 using namespace BtOgre;

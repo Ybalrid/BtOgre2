@@ -23,6 +23,7 @@
 #include <OgreMeshManager.h>
 #include <OgreMeshManager2.h>
 #include <OgreHlms.h>
+#include <OgreWindow.h>
 #include <OgreHlmsManager.h>
 #include <Hlms/Pbs/OgreHlmsPbs.h>
 #include <Compositor/OgreCompositorManager2.h>
@@ -75,7 +76,7 @@ protected:
 
 	//Window management objects
 	bool running = true;
-	RenderWindow* mWindow;
+	Ogre::Window* mWindow;
 	SDL_Window* mSDLWindow;
 	SDL_Event mSDLEvent;
 	int physicsObjectCount = 0;
@@ -374,7 +375,7 @@ protected:
 		resourceGroupManager->initialiseAllResourceGroups(false);
 
 		//Create a scene manager
-		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, INSTANCING_CULLING_THREADED, "MAIN_SMGR");
+		mSceneMgr = mRoot->createSceneManager(ST_GENERIC, SMGR_WORKERS, "MAIN_SMGR");
 
 		//Create the camera
 		mCamera = mSceneMgr->createCamera("MyCamera");
@@ -391,7 +392,7 @@ protected:
 		IdString mainWorkspace{ "MainWorkspace" };
 		if (!compositorManager->hasWorkspaceDefinition(mainWorkspace))
 			compositorManager->createBasicWorkspaceDef("MainWorkspace", ColourValue(0.05, 0.4, 0.8, 1));
-		compositorManager->addWorkspace(mSceneMgr, mWindow, mCamera, mainWorkspace, true);
+		compositorManager->addWorkspace(mSceneMgr, mWindow->getTexture(), mCamera, mainWorkspace, true);
 	}
 
 	///Render a frame
