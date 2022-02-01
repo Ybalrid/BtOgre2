@@ -17,6 +17,8 @@
 #include "BtOgreGP.h"
 #include "BtOgreExtras.h"
 
+#include <Vao/OgreIndexBufferPacked.h>
+
 using namespace Ogre;
 using namespace BtOgre;
 
