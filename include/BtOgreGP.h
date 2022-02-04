@@ -33,6 +33,12 @@
 #include "BtOgreExtras.h"
 #include "BtOgre.hpp"
 
+#if OGRE_VERSION_MINOR > 3
+#define OGRE_VertexArrayObject_ReadRequests VertexArrayObject::ReadRequestsVec
+#else
+#define OGRE_VertexArrayObject_ReadRequests VertexArrayObject::ReadRequestsArray
+#endif
+
 namespace BtOgre
 {
 	using BoneIndex = std::map<unsigned, Vector3Array*>;
@@ -126,10 +132,10 @@ namespace BtOgre
 		void getV2MeshBufferSize(const Ogre::Mesh* mesh, size_t& previousVertexSize, size_t& previousIndexSize);
 
 		///load the request and sends it to the VAO manager, this will map all tickets regarding that request, you will need to unmap them when you have finished
-		static void requestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::VertexArrayObject::ReadRequestsArray& requests);
+		static void requestV2VertexBufferFromVao(Ogre::VertexArrayObject* vao, Ogre::OGRE_VertexArrayObject_ReadRequests& requests);
 
 		///Load the vertex buffer data
-		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::VertexArrayObject::ReadRequestsArray requests, const size_t& prevSize);
+		void extractV2SubMeshVertexBuffer(size_t& subMeshOffset, Ogre::OGRE_VertexArrayObject_ReadRequests requests, const size_t& prevSize);
 
 		///Load the index buffer data using the given type (16 or 32bit) from a V2 VAO index async ticket
 		template<typename T> void loadV2IndexBuffer(Ogre::AsyncTicketPtr asyncTicket, const size_t& offset,

@@ -455,7 +455,7 @@ void VertexIndexToShape::getV2MeshBufferSize(const Mesh* mesh, size_t& previousV
 }
 
 void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset,
-	VertexArrayObject::ReadRequestsArray requests,
+	OGRE_VertexArrayObject_ReadRequests requests,
 	const size_t& prevSize)
 {
 	auto subMeshVerticiesNum = requests[0].vertexBuffer->getNumElements();
@@ -483,7 +483,7 @@ void VertexIndexToShape::extractV2SubMeshVertexBuffer(size_t& subMeshOffset,
 	subMeshOffset += subMeshVerticiesNum;
 }
 
-void VertexIndexToShape::requestV2VertexBufferFromVao(VertexArrayObject* vao, VertexArrayObject::ReadRequestsArray& requests)
+void VertexIndexToShape::requestV2VertexBufferFromVao(VertexArrayObject* vao, OGRE_VertexArrayObject_ReadRequests& requests)
 {
 	requests.push_back(VertexArrayObject::ReadRequests(VES_POSITION));
 
@@ -549,7 +549,7 @@ void StaticMeshToShapeConverter::addMesh(const Mesh* mesh, const Matrix4& transf
 		const auto indexBuffer = vao->getIndexBuffer();
 
 		//request async read from buffer
-		VertexArrayObject::ReadRequestsArray requests;
+		OGRE_VertexArrayObject_ReadRequests requests;
 		requestV2VertexBufferFromVao(vao, requests);	// /!\ Don't forget that this call will map async tickets in the request
 
 		//Load the requested data into vertex buffer, this will map the tickets.
