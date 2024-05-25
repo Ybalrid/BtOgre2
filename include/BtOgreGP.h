@@ -33,7 +33,7 @@
 #include "BtOgreExtras.h"
 #include "BtOgre.hpp"
 
-#if OGRE_VERSION_MINOR > 3
+#if (defined(OGRE_NEXT_VERSION) && OGRE_NEXT_VERSION >= 0x30000) || OGRE_VERSION_MINOR > 3
 #define OGRE_VertexArrayObject_ReadRequests VertexArrayObject::ReadRequestsVec
 #else
 #define OGRE_VertexArrayObject_ReadRequests VertexArrayObject::ReadRequestsArray
